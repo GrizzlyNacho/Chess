@@ -3,12 +3,15 @@ package viewController
 	import flash.display.Sprite;
 	import flash.events.Event;
 	import flash.events.MouseEvent;
+	import model.MatchMgr;
 	
 	public class BoardTile extends Sprite 
 	{
 		private var m_xInd:int = 0;
 		private var m_yInd:int = 0;
 		private var m_lightTile:Boolean = false;
+		private var m_pieceTeam:int = Constants.TEAM_NONE;
+		private var m_pieceType:int = Constants.TYPE_NO_PIECE;
 		
 		public function BoardTile(x:int, y:int, lightTile:Boolean) 
 		{

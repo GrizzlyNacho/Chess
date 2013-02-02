@@ -1,6 +1,7 @@
 package model 
 {
 	import flash.display.Sprite;
+	import model.pieces.Piece;
 	import viewController.View;
 	//Singleton class to track the state of the match
 	
@@ -9,7 +10,8 @@ package model
 		private static var s_Instance:MatchMgr = null;
 		
 		private var m_boardState:Array = null;
-		private var m_currentTurnIsWhite:Boolean = true;
+		private var m_currentTeam:int = Constants.TEAM_NONE;
+		private var m_currentSelectedPiece:Piece = null;
 		private var m_turnCounter:int = 0;
 		private var m_views:Array = null;
 		
@@ -42,14 +44,13 @@ package model
 		
 		public function StartNewGame():void
 		{
-			m_currentTurnIsWhite = true;
+			m_currentTeam = Constants.TEAM_WHITE;
 			m_turnCounter = 0;
 			
 			//Place starting pieces into the board state
 			
 			UpdateAllViews();
 		}
-		
 		
 		private function GetTileIndex(x:int, y:int):int
 		{

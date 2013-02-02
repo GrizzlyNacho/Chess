@@ -1,5 +1,7 @@
 package viewController 
 {
+	import model.MatchMgr;
+	
 	public class ChessBoard extends View
 	{
 		private var m_tiles:Array = null;
@@ -24,6 +26,7 @@ package viewController
 				lightTile = !lightTile;
 			}
 			
+			MatchMgr.GetInstance().RegisterView(this);
 		}
 		
 		public function Cleanup():void
