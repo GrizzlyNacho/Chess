@@ -2,14 +2,12 @@ package
 {
 	import flash.display.Sprite;
 	import flash.events.Event;
+	import model.MatchMgr;
+	import viewController.ChessBoard;
 	
-	/**
-	 * ...
-	 * @author Nathan
-	 */
 	public class Main extends Sprite 
 	{
-		
+
 		public function Main():void 
 		{
 			if (stage) init();
@@ -19,7 +17,15 @@ package
 		private function init(e:Event = null):void 
 		{
 			removeEventListener(Event.ADDED_TO_STAGE, init);
-			// entry point
+			
+			//Force initialization of MatchMgr
+			MatchMgr.GetInstance();
+			
+			//Create the board
+			var chessBoard:ChessBoard = new ChessBoard();
+			this.addChild(chessBoard);
+			
+			MatchMgr.GetInstance().StartNewGame();
 		}
 		
 	}
