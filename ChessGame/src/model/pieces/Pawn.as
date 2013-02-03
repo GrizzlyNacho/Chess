@@ -11,6 +11,17 @@ package model.pieces
 			super(team, x, y);
 		}
 		
+		override public function Clone():Piece
+		{
+			var copy:Pawn = new Pawn(m_team, m_xPos, m_yPos);
+			copy.m_hasMoved = m_hasMoved;
+			for (var i:int = 0; i < m_possibleTiles.length; i++)
+			{
+				copy.m_possibleTiles.push(m_possibleTiles[i]);
+			}
+			return copy;
+		}
+		
 		override public function GetType():int
 		{
 			return Constants.TYPE_PAWN;
@@ -45,7 +56,7 @@ package model.pieces
 		
 		override protected function UpdateAvailableMoves():void
 		{
-			m_possibleTiles.splice(0, m_possibleTiles.splice);
+			m_possibleTiles.splice(0, m_possibleTiles.length);
 			var direction:int = (m_team == Constants.TEAM_WHITE) ? -1 : 1;
 			
 			if (AddIfValidAttackOrMove(m_xPos, m_yPos + direction) && !m_hasMoved)

@@ -25,8 +25,10 @@ package model
 		private var m_currentSelectedPiece:Piece = null;
 		
 		//Track all pieces for each player
-		private var m_whitePieces:Array;
-		private var m_blackPieces:Array;
+		private var m_whitePieces:Array = null;
+		private var m_blackPieces:Array = null;
+		private var m_whiteKing:King = null;
+		private var m_blackKing:King = null;
 		
 		public function MatchMgr() 
 		{
@@ -79,26 +81,18 @@ package model
 		
 		public function SelectTile(x:int, y:int):void
 		{
-			var selectedPiece:Piece = m_boardState[GetTileIndex(x, y)];
+			var targetedPiece:Piece = m_boardState[GetTileIndex(x, y)];
 			//Determine if the unit is owned by the player
-			if (selectedPiece != null && m_currentTeam == selectedPiece.GetTeam()
-				&& selectedPiece != m_currentSelectedPiece)
+			if (targetedPiece != null && m_currentTeam == targetedPiece.GetTeam()
+				&& targetedPiece != m_currentSelectedPiece)
 			{
 				trace('Piece selected.');
-				m_currentSelectedPiece = selectedPiece;
+				m_currentSelectedPiece = targetedPiece;
 			}
 			else if (m_currentSelectedPiece != null && IsValidMoveForCurrentPiece(x,y))
 			{
-				if (selectedPiece != null && selectedPiece.GetTeam() != m_currentTeam)
-				{
-					CapturePiece(x, y);
-				}
-				
-				//Move the current piece and remove it from its previous space
 				var origin:int = m_currentSelectedPiece.GetLocation();
-				m_boardState[GetTileIndex(x, y)] = m_currentSelectedPiece;
-				m_boardState[origin] = null;
-				m_currentSelectedPiece.MovePiece(x,y);
+				ExecuteMove(targetedPiece, origin, x, y);
 				
 				//Update the remaining pieces
 				UpdateMoves(Constants.TEAM_BLACK, origin, GetTileIndex(x, y));
@@ -116,6 +110,11 @@ package model
 			
 			m_currentTeam = 1 - m_currentTeam;
 			m_currentSelectedPiece = null;
+			
+			if (IsTeamInCheck(m_currentTeam))
+			{
+				trace('Team ' + m_currentTeam + ' is in CHECK!');
+			}
 			
 			//End of game conditions should probably sit here.
 			//Check-Mate
@@ -195,16 +194,17 @@ package model
 				return false;
 			}
 			
-			//FIXME: Consider placing yourself in check
-			
-			if (targetIsPiece)
+			if (targetIsPiece && m_currentSelectedPiece.CanAttack(GetTileIndex(x, y)))
 			{
-				return m_currentSelectedPiece.CanAttack(GetTileIndex(x, y));
+				
+				return !IsSelfHarmingMove(x,y);
 			}
-			else //The distinction between move and attack is relevant for the pawn
+
+			if(!targetIsPiece && m_currentSelectedPiece.CanMove(GetTileIndex(x, y)))
 			{
-				return m_currentSelectedPiece.CanMove(GetTileIndex(x, y));
+				return !IsSelfHarmingMove(x,y);
 			}
+			return false
 		}
 		
 		private function UpdateAllViews():void
@@ -244,6 +244,14 @@ package model
 					break;
 				case Constants.TYPE_KING:
 					newPiece = new King(team, x, y);
+					if (team == Constants.TEAM_WHITE)
+					{
+						m_whiteKing = newPiece as King;
+					}
+					else if (team == Constants.TEAM_BLACK)
+					{
+						m_blackKing = newPiece as King;
+					}
 					break;
 				default:
 					newPiece = null;
@@ -251,6 +259,7 @@ package model
 			}
 			
 			m_boardState[GetTileIndex(x, y)] = newPiece;
+			
 			if (team == Constants.TEAM_WHITE)
 			{
 				m_whitePieces.push(newPiece);
@@ -284,6 +293,94 @@ package model
 		
 			capturedPiece.Cleanup();
 			capturedPiece = null;
+		}
+		
+		private function ExecuteMove(selectedPiece:Piece, origin:int, x:int, y:int):void 
+		{
+			if (selectedPiece != null && selectedPiece.GetTeam() != m_currentTeam)
+			{
+				CapturePiece(x, y);
+			}
+			
+			//Move the current piece and remove it from its previous space
+			m_boardState[GetTileIndex(x, y)] = m_currentSelectedPiece;
+			m_boardState[origin] = null;
+			m_currentSelectedPiece.MovePiece(x, y);
+		}
+		
+		//Tests if moving the currently selected piece to the target location would put the moving player in check
+		//Assumes that the move is otherwise perfectly valid
+		private function IsSelfHarmingMove(x:int, y:int):Boolean
+		{
+			//Grab backups of any data that could be lost
+			var origin:int = m_currentSelectedPiece.GetLocation();
+			var selectedCopy:Piece = m_currentSelectedPiece.Clone();
+			var pieceAtDestinationCopy:Piece = null;
+			if (m_boardState[GetTileIndex(x, y)] != null)
+			{
+				pieceAtDestinationCopy = (m_boardState[GetTileIndex(x, y)] as Piece).Clone();
+			}
+			
+			//Perform the action to test
+			ExecuteMove(pieceAtDestinationCopy, origin, x, y);
+			var opposingTeam:int = 1 - m_currentTeam;
+			UpdateMoves(opposingTeam, origin, GetTileIndex(x, y));
+			
+			//Determine check
+			var inCheck:Boolean = IsTeamInCheck(m_currentTeam);
+
+			//Reset the position and state of the selected piece
+			//possible moves weren't updated for the current team, so everything should be consistent
+			m_currentSelectedPiece.SetFlagsTo(selectedCopy);
+			selectedCopy.Cleanup();
+			selectedCopy = null;
+			m_boardState[origin] = m_currentSelectedPiece;
+			if (pieceAtDestinationCopy == null) //It was just a move. Not a capture
+			{
+				m_boardState[GetTileIndex(x, y)] = null;
+			}
+			else //An enemy piece was captured. We need to restore it both to its list and to the board
+			{
+				m_boardState[GetTileIndex(x, y)] = pieceAtDestinationCopy;
+				if (pieceAtDestinationCopy.GetTeam() == Constants.TEAM_WHITE)
+				{
+					m_whitePieces.push(pieceAtDestinationCopy);
+				}
+				else if (pieceAtDestinationCopy.GetTeam() == Constants.TEAM_BLACK)
+				{
+					m_blackPieces.push(pieceAtDestinationCopy);
+				}
+			}
+			
+			//Update the enemy moves again to keep them consistent
+			UpdateMoves(opposingTeam, origin, GetTileIndex(x, y));
+			
+			return inCheck;
+		}
+		
+		private function IsTeamInCheck(team:int):Boolean
+		{
+			var allyKingLocation:int = -1;
+			var enemyTeamList:Array = null;
+			if (team == Constants.TEAM_WHITE)
+			{
+				enemyTeamList = m_blackPieces;
+				allyKingLocation = m_whiteKing.GetLocation();
+			}
+			else if (team == Constants.TEAM_BLACK)
+			{
+				enemyTeamList = m_whitePieces;
+				allyKingLocation = m_blackKing.GetLocation();
+			}
+			
+			for (var i:int = 0; enemyTeamList != null && i < enemyTeamList.length; i++)
+			{
+				if ((enemyTeamList[i] as Piece).CanAttack(allyKingLocation))
+				{
+					return true;
+				}
+			}
+			return false;
 		}
 		
 	}

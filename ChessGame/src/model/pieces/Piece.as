@@ -28,10 +28,23 @@ package model.pieces
 			m_possibleTiles = new Array();
 		}
 		
+		public function Clone():Piece
+		{
+			//Override in children to produce the same sub-class content
+			return null;
+		}
+		
 		public function Cleanup():void
 		{
 			m_possibleTiles.splice(0, m_possibleTiles.length);
 			m_possibleTiles = null;
+		}
+		
+		public function SetFlagsTo(piece:Piece):void
+		{
+			m_hasMoved = piece.m_hasMoved;
+			m_xPos = piece.m_xPos;
+			m_yPos = piece.m_yPos;
 		}
 		
 		public function GetType():int
