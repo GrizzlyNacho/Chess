@@ -30,6 +30,11 @@ package model.pieces
 			return m_team;
 		}
 		
+		public function MarkMoved():void 
+		{
+			m_hasMoved = true;
+		}
+		
 		
 		//Determines if the move is possible or not, and adds it if it is
 		//Will return true if the case is added and the case is not an end case.

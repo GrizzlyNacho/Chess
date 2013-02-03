@@ -90,7 +90,7 @@ package model
 				//Move the current piece and remove it from its previous space
 				m_boardState[GetTileIndex(x, y)] = m_boardState[m_currentSelectionLocation];
 				m_boardState[m_currentSelectionLocation] = null;
-				
+				(m_boardState[GetTileIndex(x, y)] as Piece).MarkMoved();
 				
 				EndTurn();
 			}

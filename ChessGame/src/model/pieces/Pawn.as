@@ -25,7 +25,10 @@ package model.pieces
 			AddIfValidUnoccupiedMove(x, y + direction, moves);
 			
 			//Test the special first move (x, y + 2*direction) into an unoccupied space
-			AddIfValidUnoccupiedMove(x, y + 2 * direction, moves);
+			if (!m_hasMoved)
+			{
+				AddIfValidUnoccupiedMove(x, y + 2 * direction, moves);
+			}
 			
 			//Check attack moves
 			AddIfValidPawnAttackMove(x - 1, y + direction, moves);
