@@ -16,7 +16,7 @@ package model
 		
 		private var m_currentTeam:int = Constants.TEAM_NONE;
 		private var m_currentSelectedPiece:Piece = null;
-		private var m_currentSelectedLocation:int = -1;
+		private var m_currentSelectionLocation:int = -1;
 		private var m_validMovesForSelected:Array = null;
 		
 		
@@ -70,7 +70,7 @@ package model
 			{
 				trace('Piece selected.');
 				m_currentSelectedPiece = selectedPiece;
-				m_currentSelectedLocation = GetTileIndex(x, y);
+				m_currentSelectionLocation = GetTileIndex(x, y);
 				m_validMovesForSelected = selectedPiece.GetAvailableMovesFrom(x,y);
 			}
 			else if (m_currentSelectedPiece != null && IsValidMoveForCurrentPiece(x,y))
@@ -82,9 +82,9 @@ package model
 				}
 				
 				//Move the current piece there.
-				m_boardState[GetTileIndex(x, y)] = m_boardState[m_currentSelectedLocation];
+				m_boardState[GetTileIndex(x, y)] = m_boardState[m_currentSelectionLocation];
 				//Remove the piece from its previous space
-				m_boardState[m_currentSelectedLocation] = null;
+				m_boardState[m_currentSelectionLocation] = null;
 				
 				EndTurn();
 			}
@@ -97,7 +97,7 @@ package model
 			
 			m_currentTeam = 1 - m_currentTeam;
 			m_currentSelectedPiece = null;
-			m_currentSelectedLocation = -1;
+			m_currentSelectionLocation = -1;
 			if (m_validMovesForSelected)
 			{
 				m_validMovesForSelected.splice(0, m_validMovesForSelected.length);
