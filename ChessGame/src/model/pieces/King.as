@@ -20,6 +20,10 @@ package model.pieces
 			{
 				copy.m_possibleTiles.push(m_possibleTiles[i]);
 			}
+			for (i = 0; i < m_watchTiles.length; i++)
+			{
+				copy.m_watchTiles.push(m_watchTiles[i]);
+			}
 			return copy;
 		}
 		
@@ -69,6 +73,14 @@ package model.pieces
 			}
 			return m_possibleTiles.indexOf(index) >= 0;
 		}
+		
+		override public function Cleanup():void
+		{
+			m_watchTiles.splice(0, m_watchTiles.length);
+			m_watchTiles = null;
+			super.Cleanup();
+		}
+		
 		
 		override protected function UpdateAvailableMoves():void
 		{
