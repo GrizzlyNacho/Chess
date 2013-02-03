@@ -2,15 +2,36 @@ package model.pieces
 {
 	import model.MatchMgr;
 	
-	//Base class for all piece types
+	/*
+	 * Base class for all piece types
+	 * Pieces track their location and an array of all positions they can affect.
+	 * They update the list of positions they can affect only when there is a change in that list.
+	 * This way, only relevant pieces go through the process of computing new positions each time a piece is moved.
+	 */
+	
 	public class Piece 
 	{
 		protected var m_hasMoved:Boolean = false;
 		protected var m_team:int = Constants.TEAM_NONE;
+		protected var m_xPos:int = -1;
+		protected var m_yPos:int = -1;
 		
-		public function Piece(team:int) 
+		//All tiles that the piece need be aware of
+		//Includes possible moves, captures, and pieces this piece is defending
+		protected var m_possibleTiles:Array = null;
+		
+		public function Piece(team:int, x:int, y:int) 
 		{
 			m_team = team;
+			m_xPos = x;
+			m_yPos = y;
+			m_possibleTiles = new Array();
+		}
+		
+		public function Cleanup():void
+		{
+			m_possibleTiles.splice(0, m_possibleTiles.length);
+			m_possibleTiles = null;
 		}
 		
 		public function GetType():int
@@ -19,10 +40,42 @@ package model.pieces
 			return Constants.TYPE_NO_PIECE;
 		}
 		
-		public function GetAvailableMovesFrom(x:int, y:int):Array
+		//This is only to be called on empty tiles
+		public function CanMove(index:int):Boolean
 		{
-			//Override in children
-			return null;
+			return m_possibleTiles && m_possibleTiles.indexOf(index) >= 0;
+		}
+		
+		//Only to be called on tiles with enemy pieces
+		public function CanAttack(index:int):Boolean
+		{
+			return CanMove(index);
+		}
+		
+		//Test if this index is within the possible moves list and update the possible moves list if it is
+		public function CheckUpdate(movedFromIndex:int, movedToIndex:int):void
+		{
+			if (m_possibleTiles && (m_possibleTiles.indexOf(movedFromIndex) >= 0
+				|| m_possibleTiles.indexOf(movedToIndex) >= 0))
+			{
+				UpdateAvailableMoves();
+			}
+		}
+		
+		//To be used just after the board is set up and before any player's turn
+		public function Setup():void
+		{
+			m_hasMoved = false;
+			UpdateAvailableMoves();
+		}
+		
+		public function MovePiece(x:int, y:int):void
+		{
+			m_hasMoved = true;
+			m_xPos = x;
+			m_yPos = y;
+			
+			//This piece's possible moves will update with the rest of the pieces when checkUpdate is called
 		}
 		
 		public function GetTeam():int 
@@ -30,17 +83,21 @@ package model.pieces
 			return m_team;
 		}
 		
-		public function MarkMoved():void 
+		public function GetLocation():int 
 		{
-			m_hasMoved = true;
+			return MatchMgr.GetInstance().GetTileIndex(m_xPos, m_yPos);
 		}
 		
 		
+		//Add all spaces that can be moved to, defended, or captured to possible moves
+		protected function UpdateAvailableMoves():void
+		{
+			//Override in children
+		}
+		
 		//Determines if the move is possible or not, and adds it if it is
-		//Will return true if the case is added and the case is not an end case.
-		//Example: Testing a position that contains an enemy unit will return false after adding it to the legal moves
-		//	since the moving unit cannot go further than taking the enemy unit in that direction.
-		protected function AddIfValidAttackOrMove(x:int, y:int, outMoves:Array):Boolean
+		//Will return true if the case is added and the space is empty
+		protected function AddIfValidAttackOrMove(x:int, y:int):Boolean
 		{
 			if (IsMoveInBounds(x, y))
 			{
@@ -50,12 +107,12 @@ package model.pieces
 				//Either unoccupied or occupied by an enemy piece
 				if (tileType == Constants.TYPE_NO_PIECE)
 				{
-					outMoves.push(MatchMgr.GetInstance().GetTileIndex(x, y));
+					m_possibleTiles.push(MatchMgr.GetInstance().GetTileIndex(x, y));
 					return true;
 				}
-				else if (tileType != Constants.TYPE_NO_PIECE && tileTeam != m_team)
+				else if (tileType != Constants.TYPE_NO_PIECE)
 				{
-					outMoves.push(MatchMgr.GetInstance().GetTileIndex(x, y));
+					m_possibleTiles.push(MatchMgr.GetInstance().GetTileIndex(x, y));
 					return false;
 				}
 				

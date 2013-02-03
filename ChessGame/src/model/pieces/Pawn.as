@@ -6,9 +6,9 @@ package model.pieces
 	public class Pawn extends Piece 
 	{
 		
-		public function Pawn(team:int) 
+		public function Pawn(team:int, x:int, y:int) 
 		{
-			super(team);
+			super(team, x, y);
 		}
 		
 		override public function GetType():int
@@ -16,45 +16,48 @@ package model.pieces
 			return Constants.TYPE_PAWN;
 		}
 		
-		override public function GetAvailableMovesFrom(x:int, y:int):Array
+		//Pawns are special as they can only move diagonally if attacking
+		override public function CanAttack(index:int):Boolean
 		{
-			var moves:Array = new Array();
+			var x:int = index % Constants.BOARD_SIZE;
+			var y:int = index / Constants.BOARD_SIZE;
 			var direction:int = (m_team == Constants.TEAM_WHITE) ? -1 : 1;
 			
-			//Test the basic move (x, y+direction) into an unoccupied space
-			AddIfValidUnoccupiedMove(x, y + direction, moves);
-			
-			//Test the special first move (x, y + 2*direction) into an unoccupied space
-			if (!m_hasMoved && MatchMgr.GetInstance().GetTileType(x, y + direction) == Constants.TYPE_NO_PIECE)
+			if ( Math.abs(x - m_xPos) == 1
+				&& y == (m_yPos + direction))
 			{
-				AddIfValidUnoccupiedMove(x, y + 2 * direction, moves);
+				return true;
+			}
+			return false;
+		}
+		
+		//Move is only called if the tile is empty
+		override public function CanMove(index:int):Boolean
+		{
+			var x:int = index % Constants.BOARD_SIZE;
+			
+			if ( x == m_xPos)
+			{
+				return m_possibleTiles.indexOf(index) >= 0;
+			}
+			return false;
+		}
+		
+		override protected function UpdateAvailableMoves():void
+		{
+			m_possibleTiles.splice(0, m_possibleTiles.splice);
+			var direction:int = (m_team == Constants.TEAM_WHITE) ? -1 : 1;
+			
+			if (AddIfValidAttackOrMove(m_xPos, m_yPos + direction) && !m_hasMoved)
+			{
+				AddIfValidAttackOrMove(m_xPos, m_yPos + 2 * direction);
 			}
 			
 			//Check attack moves
-			AddIfValidPawnAttackMove(x - 1, y + direction, moves);
-			AddIfValidPawnAttackMove(x + 1, y + direction, moves);
+			AddIfValidAttackOrMove(m_xPos - 1, m_yPos + direction);
+			AddIfValidAttackOrMove(m_xPos + 1, m_yPos + direction)
 			
 			//FIXME: En Passant Case
-			
-			return moves;
-		}
-		
-		private function AddIfValidUnoccupiedMove(x:int, y:int, outMoves:Array):void
-		{
-			if (IsMoveInBounds(x, y) && MatchMgr.GetInstance().GetTileType(x, y) == Constants.TYPE_NO_PIECE)
-			{
-				outMoves.push(MatchMgr.GetInstance().GetTileIndex(x, y));
-			}
-		}
-		
-		private function AddIfValidPawnAttackMove(x:int, y:int, outMoves:Array):void
-		{
-			if (IsMoveInBounds(x, y) 
-				&& MatchMgr.GetInstance().GetTileType(x, y) != Constants.TYPE_NO_PIECE
-				&& MatchMgr.GetInstance().GetTileTeam(x, y) != m_team)
-			{
-				outMoves.push(MatchMgr.GetInstance().GetTileIndex(x, y));
-			}
 		}
 		
 	}

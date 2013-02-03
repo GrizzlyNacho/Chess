@@ -4,9 +4,9 @@ package model.pieces
 	public class Rook extends Piece 
 	{
 		
-		public function Rook(team:int) 
+		public function Rook(team:int, x:int, y:int) 
 		{
-			super(team);		
+			super(team, x, y);		
 		}
 		
 		override public function GetType():int
@@ -14,40 +14,38 @@ package model.pieces
 			return Constants.TYPE_ROOK;
 		}
 		
-		override public function GetAvailableMovesFrom(x:int, y:int):Array
+		override protected function UpdateAvailableMoves():void
 		{
-			var moves:Array = new Array();
+			m_possibleTiles.splice(0, m_possibleTiles.length);
 			
 			//Try each cardinal direction
 			//Left
 			var i:int = 1;
-			while (AddIfValidAttackOrMove(x - i, y, moves))
+			while (AddIfValidAttackOrMove(m_xPos - i, m_yPos))
 			{
 				i++;
 			}
 			
 			//Right
 			i = 1;
-			while (AddIfValidAttackOrMove(x + i, y, moves))
+			while (AddIfValidAttackOrMove(m_xPos + i, m_yPos))
 			{
 				i++;
 			}
 			
 			//Up
 			i = 1;
-			while (AddIfValidAttackOrMove(x, y - i, moves))
+			while (AddIfValidAttackOrMove(m_xPos, m_yPos  - i))
 			{
 				i++;
 			}
 			
 			//Down
 			i = 1;
-			while (AddIfValidAttackOrMove(x, y + i, moves))
+			while (AddIfValidAttackOrMove(m_xPos, m_yPos + i))
 			{
 				i++;
 			}
-			
-			return moves;
 		}
 		
 	}

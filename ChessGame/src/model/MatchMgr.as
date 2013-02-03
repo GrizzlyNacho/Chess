@@ -1,11 +1,15 @@
 package model 
 {
-	import flash.display.Sprite;
 	import model.pieces.Pawn;
 	import model.pieces.Piece;
 	import model.pieces.Rook;
 	import viewController.View;
-	//Singleton class to track the state of the match
+
+	/*
+	 * Singleton class to track the state of the match.
+	 * The pieces are tracked in a grid for access by location on the board,
+	 * as well as in lists for each team in order to avoid having to scan the board for pieces by team.
+	 */
 	
 	public class MatchMgr 
 	{
@@ -16,14 +20,18 @@ package model
 		private var m_views:Array = null;
 		
 		private var m_currentTeam:int = Constants.TEAM_NONE;
-		private var m_currentSelectedPiece:Piece = null;
-		private var m_currentSelectionLocation:int = -1;
-		private var m_validMovesForSelected:Array = null;
 		
+		private var m_currentSelectedPiece:Piece = null;
+		
+		//Track all pieces for each player
+		private var m_whitePieces:Array;
+		private var m_blackPieces:Array;
 		
 		public function MatchMgr() 
 		{
 			m_views = new Array();
+			m_whitePieces = new Array();
+			m_blackPieces = new Array();
 			
 			//Initialize the board state to full null.
 			m_boardState = new Array();
@@ -53,16 +61,17 @@ package model
 			m_currentTeam = Constants.TEAM_WHITE;
 			m_turnCounter = 0;
 			
-			//Place starting pieces into the board state
-			for (var i:int = 0; i < Constants.BOARD_SIZE; i++)
+			AddStandardBoardSetup();
+			
+			//FIXME: Can combine the following two loops if same length is guaranteed, but it isn't for testing
+			for (var i:int = 0; i < m_blackPieces.length; i++)
 			{
-				m_boardState[GetTileIndex(i, 1)] = new Pawn(Constants.TEAM_BLACK);
-				m_boardState[GetTileIndex(i, 6)] = new Pawn(Constants.TEAM_WHITE);
+				(m_blackPieces[i] as Piece).Setup();
 			}
-			m_boardState[GetTileIndex(0, 0)] = new Rook(Constants.TEAM_BLACK);
-			m_boardState[GetTileIndex(7, 0)] = new Rook(Constants.TEAM_BLACK);
-			m_boardState[GetTileIndex(0, 7)] = new Rook(Constants.TEAM_WHITE);
-			m_boardState[GetTileIndex(7, 7)] = new Rook(Constants.TEAM_WHITE);
+			for (i = 0; i < m_whitePieces.length; i++)
+			{
+				(m_whitePieces[i] as Piece).Setup();
+			}
 			
 			UpdateAllViews();
 		}
@@ -76,21 +85,23 @@ package model
 			{
 				trace('Piece selected.');
 				m_currentSelectedPiece = selectedPiece;
-				m_currentSelectionLocation = GetTileIndex(x, y);
-				m_validMovesForSelected = selectedPiece.GetAvailableMovesFrom(x,y);
 			}
 			else if (m_currentSelectedPiece != null && IsValidMoveForCurrentPiece(x,y))
 			{
 				if (selectedPiece != null && selectedPiece.GetTeam() != m_currentTeam)
 				{
-					//Capture the piece
-					m_boardState[GetTileIndex(x,y)] = null;
+					CapturePiece(x, y);
 				}
 				
 				//Move the current piece and remove it from its previous space
-				m_boardState[GetTileIndex(x, y)] = m_boardState[m_currentSelectionLocation];
-				m_boardState[m_currentSelectionLocation] = null;
-				(m_boardState[GetTileIndex(x, y)] as Piece).MarkMoved();
+				var origin:int = m_currentSelectedPiece.GetLocation();
+				m_boardState[GetTileIndex(x, y)] = m_currentSelectedPiece;
+				m_boardState[origin] = null;
+				m_currentSelectedPiece.MovePiece(x,y);
+				
+				//Update the remaining pieces
+				UpdateMoves(Constants.TEAM_BLACK, origin, GetTileIndex(x, y));
+				UpdateMoves(Constants.TEAM_WHITE, origin, GetTileIndex(x, y));
 				
 				EndTurn();
 			}
@@ -104,12 +115,11 @@ package model
 			
 			m_currentTeam = 1 - m_currentTeam;
 			m_currentSelectedPiece = null;
-			m_currentSelectionLocation = -1;
-			if (m_validMovesForSelected)
-			{
-				m_validMovesForSelected.splice(0, m_validMovesForSelected.length);
-				m_validMovesForSelected = null;
-			}
+			
+			//End of game conditions should probably sit here.
+			//Check-Mate
+			//Check
+			//Draw
 		}
 		
 		public function GetTileTeam(x:int, y:int):int
@@ -142,7 +152,11 @@ package model
 		
 		public function GetIsSelectedLocation(x:int, y:int):Boolean
 		{
-			return m_currentSelectionLocation == GetTileIndex(x, y);
+			if (m_currentSelectedPiece != null)
+			{
+				return m_currentSelectedPiece.GetLocation() == GetTileIndex(x, y);
+			}
+			return false;
 		}
 		
 		public function GetTileIndex(x:int, y:int):int
@@ -150,10 +164,46 @@ package model
 			return x + y * Constants.BOARD_SIZE;
 		}
 		
+		
+		private function UpdateMoves(team:int, fromIndex:int, toIndex:int):void
+		{
+			var pieces:Array;
+			if (team == Constants.TEAM_WHITE)
+			{
+				pieces = m_whitePieces;
+			}
+			else if (team == Constants.TEAM_BLACK)
+			{
+				pieces = m_blackPieces;
+			}
+			
+			for (var i:int = 0; i < pieces.length; i++)
+			{
+				(pieces[i] as Piece).CheckUpdate(fromIndex, toIndex);
+			}
+		}
+		
 		private function IsValidMoveForCurrentPiece(x:int, y:int):Boolean
 		{
-			return (m_validMovesForSelected != null &&
-					m_validMovesForSelected.indexOf(GetTileIndex(x, y)) >= 0);
+			var targetTeam:int = GetTileTeam(x, y);
+			var targetIsPiece:Boolean = GetTileType(x, y) != Constants.TYPE_NO_PIECE;
+			
+			//Can't move onto teammates
+			if (targetIsPiece && targetTeam == m_currentTeam)
+			{
+				return false;
+			}
+			
+			//FIXME: Consider placing yourself in check
+			
+			if (targetIsPiece)
+			{
+				return m_currentSelectedPiece.CanAttack(GetTileIndex(x, y));
+			}
+			else //The distinction between move and attack is relevant for the pawn
+			{
+				return m_currentSelectedPiece.CanMove(GetTileIndex(x, y));
+			}
 		}
 		
 		private function UpdateAllViews():void
@@ -162,6 +212,72 @@ package model
 			{
 				(m_views[i] as View).UpdateView();
 			}
+		}
+		
+		private function AddStandardBoardSetup():void
+		{			
+			for (var i:int = 0; i < Constants.BOARD_SIZE; i++)
+			{
+				AddPieceToBoard(Constants.TYPE_PAWN, Constants.TEAM_BLACK, i, 1);
+				AddPieceToBoard(Constants.TYPE_PAWN, Constants.TEAM_WHITE, i, 6);
+			}
+			
+			AddPieceToBoard(Constants.TYPE_ROOK, Constants.TEAM_BLACK, 0, 0);
+			AddPieceToBoard(Constants.TYPE_ROOK, Constants.TEAM_BLACK, 7, 0);
+			AddPieceToBoard(Constants.TYPE_ROOK, Constants.TEAM_WHITE, 0, 7);
+			AddPieceToBoard(Constants.TYPE_ROOK, Constants.TEAM_WHITE, 7, 7);
+		}
+		
+		private function AddPieceToBoard(type:int, team:int, x:int, y:int):void
+		{
+			var newPiece:Piece = null;
+			switch(type)
+			{
+				case Constants.TYPE_PAWN:
+					newPiece = new Pawn(team, x, y);
+					break;
+				case Constants.TYPE_ROOK:
+					newPiece = new Rook(team, x, y);
+					break;
+				default:
+					newPiece = null;
+					break;
+			}
+			
+			m_boardState[GetTileIndex(x, y)] = newPiece;
+			if (team == Constants.TEAM_WHITE)
+			{
+				m_whitePieces.push(newPiece);
+			}
+			else if (team == Constants.TEAM_BLACK)
+			{
+				m_blackPieces.push(newPiece);
+			}
+		}
+		
+		private function CapturePiece(x:int, y:int):void
+		{
+			var capturedPiece:Piece = m_boardState[GetTileIndex(x, y)] as Piece;
+			var index:int = -1;
+			var pieceList:Array = null;
+			
+			if (capturedPiece.GetTeam() == Constants.TEAM_WHITE)
+			{
+				pieceList = m_whitePieces;
+			}
+			else if (capturedPiece.GetTeam() == Constants.TEAM_BLACK)
+			{
+				pieceList = m_blackPieces;
+			}
+			
+			index = pieceList.indexOf(capturedPiece);
+			if (index >= 0)
+			{
+				pieceList.splice(index, 1);
+			}
+		
+			capturedPiece.Cleanup();
+			capturedPiece = null;
 		}
 		
 	}
