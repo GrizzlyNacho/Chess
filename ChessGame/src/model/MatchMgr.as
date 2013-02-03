@@ -71,7 +71,8 @@ package model
 		{
 			var selectedPiece:Piece = m_boardState[GetTileIndex(x, y)];
 			//Determine if the unit is owned by the player
-			if (selectedPiece != null && m_currentTeam == selectedPiece.GetTeam())
+			if (selectedPiece != null && m_currentTeam == selectedPiece.GetTeam()
+				&& selectedPiece != m_currentSelectedPiece)
 			{
 				trace('Piece selected.');
 				m_currentSelectedPiece = selectedPiece;
@@ -86,13 +87,14 @@ package model
 					m_boardState[GetTileIndex(x,y)] = null;
 				}
 				
-				//Move the current piece there.
+				//Move the current piece and remove it from its previous space
 				m_boardState[GetTileIndex(x, y)] = m_boardState[m_currentSelectionLocation];
-				//Remove the piece from its previous space
 				m_boardState[m_currentSelectionLocation] = null;
+				
 				
 				EndTurn();
 			}
+			
 			UpdateAllViews();
 		}
 		
@@ -138,11 +140,15 @@ package model
 			return m_currentTeam;
 		}
 		
+		public function GetIsSelectedLocation(x:int, y:int):Boolean
+		{
+			return m_currentSelectionLocation == GetTileIndex(x, y);
+		}
+		
 		public function GetTileIndex(x:int, y:int):int
 		{
 			return x + y * Constants.BOARD_SIZE;
 		}
-
 		
 		private function IsValidMoveForCurrentPiece(x:int, y:int):Boolean
 		{

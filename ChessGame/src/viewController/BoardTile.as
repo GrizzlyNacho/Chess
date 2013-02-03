@@ -15,6 +15,7 @@ package viewController
 		private var m_pieceImage:Bitmap = null;
 		private var m_pieceTeam:int = Constants.TEAM_NONE;
 		private var m_pieceType:int = Constants.TYPE_NO_PIECE;
+		private var m_selectionImage:Bitmap = null;
 		
 		public function BoardTile(x:int, y:int, lightTile:Boolean) 
 		{
@@ -32,6 +33,10 @@ package viewController
 			this.useHandCursor = true;
 			this.mouseChildren = false;
 			this.addEventListener(MouseEvent.CLICK, TileClickedCB);
+			
+			m_selectionImage = new Resources.SelectionImage();
+			m_selectionImage.visible = false;
+			this.addChild(m_selectionImage);
 		}
 		
 		public function Cleanup():void
@@ -43,6 +48,7 @@ package viewController
 		{
 			var newTeam:int = MatchMgr.GetInstance().GetTileTeam(m_xInd, m_yInd);
 			var newType:int = MatchMgr.GetInstance().GetTileType(m_xInd, m_yInd);
+			var isSelected:Boolean = MatchMgr.GetInstance().GetIsSelectedLocation(m_xInd, m_yInd);
 			
 			//Update the image only if needed
 			if (newType != m_pieceType)
@@ -63,13 +69,24 @@ package viewController
 				}
 			}
 			
-			//Update the team filter if needed
+			//Update the team filter on the piece image if needed
 			if (newTeam != m_pieceTeam && newTeam != Constants.TEAM_NONE)
 			{
 				m_pieceTeam = newTeam;
 				
+				if (m_pieceImage.filters != null)
+				{
+					m_pieceImage.filters.splice(0, m_pieceImage.filters.length);
+				}
 				m_pieceImage.filters = [(newTeam == Constants.TEAM_WHITE) ? 
 						Constants.WHITE_PIECE_FILTER : Constants.BLACK_PIECE_FILTER];
+			}
+			
+			//Update the selection indicator
+			m_selectionImage.visible = false;
+			if (isSelected)
+			{
+				m_selectionImage.visible = true;
 			}
 		}
 		
