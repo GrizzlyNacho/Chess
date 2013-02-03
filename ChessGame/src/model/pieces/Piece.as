@@ -31,7 +31,10 @@ package model.pieces
 		}
 		
 		
-		//Determines if the move is possible or not and returns true if it is added.
+		//Determines if the move is possible or not, and adds it if it is
+		//Will return true if the case is added and the case is not an end case.
+		//Example: Testing a position that contains an enemy unit will return false after adding it to the legal moves
+		//	since the moving unit cannot go further than taking the enemy unit in that direction.
 		protected function AddIfValidAttackOrMove(x:int, y:int, outMoves:Array):Boolean
 		{
 			if (IsMoveInBounds(x, y))
@@ -40,12 +43,17 @@ package model.pieces
 				var tileTeam:int = MatchMgr.GetInstance().GetTileTeam(x, y);
 				
 				//Either unoccupied or occupied by an enemy piece
-				if (tileType == Constants.TYPE_NO_PIECE 
-					|| (tileType != Constants.TYPE_NO_PIECE && tileTeam != m_team))
+				if (tileType == Constants.TYPE_NO_PIECE)
 				{
 					outMoves.push(MatchMgr.GetInstance().GetTileIndex(x, y));
 					return true;
 				}
+				else if (tileType != Constants.TYPE_NO_PIECE && tileTeam != m_team)
+				{
+					outMoves.push(MatchMgr.GetInstance().GetTileIndex(x, y));
+					return false;
+				}
+				
 			}
 			return false;
 		}
