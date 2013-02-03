@@ -79,6 +79,8 @@ package viewController
 			{
 				case Constants.TYPE_PAWN:
 					return new Resources.PawnImage();
+				case Constants.TYPE_ROOK:
+					return new Resources.RookImage();
 				default:
 					return null;
 			}

@@ -1,5 +1,7 @@
 package model.pieces 
 {
+	import model.MatchMgr;
+	
 	//Base class for all piece types
 	public class Piece 
 	{
@@ -28,6 +30,25 @@ package model.pieces
 			return m_team;
 		}
 		
+		
+		//Determines if the move is possible or not and returns true if it is added.
+		protected function AddIfValidAttackOrMove(x:int, y:int, outMoves:Array):Boolean
+		{
+			if (IsMoveInBounds(x, y))
+			{
+				var tileType:int =  MatchMgr.GetInstance().GetTileType(x, y);
+				var tileTeam:int = MatchMgr.GetInstance().GetTileTeam(x, y);
+				
+				//Either unoccupied or occupied by an enemy piece
+				if (tileType == Constants.TYPE_NO_PIECE 
+					|| (tileType != Constants.TYPE_NO_PIECE && tileTeam != m_team))
+				{
+					outMoves.push(MatchMgr.GetInstance().GetTileIndex(x, y));
+					return true;
+				}
+			}
+			return false;
+		}
 		
 		protected function IsMoveInBounds(x:int, y:int):Boolean
 		{

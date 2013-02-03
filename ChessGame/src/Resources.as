@@ -6,6 +6,9 @@ package
 	{
 		[Embed (source = "../assets/pawn.png")]
 		public static const PawnImage:Class;
+		
+		[Embed (source = "../assets/rook.png")]
+		public static const RookImage:Class;
 	}
 
 }

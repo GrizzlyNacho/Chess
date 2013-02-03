@@ -3,6 +3,7 @@ package model
 	import flash.display.Sprite;
 	import model.pieces.Pawn;
 	import model.pieces.Piece;
+	import model.pieces.Rook;
 	import viewController.View;
 	//Singleton class to track the state of the match
 	
@@ -56,8 +57,12 @@ package model
 			for (var i:int = 0; i < Constants.BOARD_SIZE; i++)
 			{
 				m_boardState[GetTileIndex(i, 1)] = new Pawn(Constants.TEAM_BLACK);
-				m_boardState[GetTileIndex(i, Constants.BOARD_SIZE - 2)] = new Pawn(Constants.TEAM_WHITE);
+				m_boardState[GetTileIndex(i, 6)] = new Pawn(Constants.TEAM_WHITE);
 			}
+			m_boardState[GetTileIndex(0, 0)] = new Rook(Constants.TEAM_BLACK);
+			m_boardState[GetTileIndex(7, 0)] = new Rook(Constants.TEAM_BLACK);
+			m_boardState[GetTileIndex(0, 7)] = new Rook(Constants.TEAM_WHITE);
+			m_boardState[GetTileIndex(7, 7)] = new Rook(Constants.TEAM_WHITE);
 			
 			UpdateAllViews();
 		}
