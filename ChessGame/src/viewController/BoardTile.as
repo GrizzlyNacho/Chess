@@ -1,5 +1,6 @@
 package viewController 
 {
+	import flash.display.Bitmap;
 	import flash.display.Sprite;
 	import flash.events.Event;
 	import flash.events.MouseEvent;
@@ -10,6 +11,8 @@ package viewController
 		private var m_xInd:int = 0;
 		private var m_yInd:int = 0;
 		private var m_lightTile:Boolean = false;
+		
+		private var m_pieceImage:Bitmap = null;
 		private var m_pieceTeam:int = Constants.TEAM_NONE;
 		private var m_pieceType:int = Constants.TYPE_NO_PIECE;
 		
@@ -38,13 +41,53 @@ package viewController
 		
 		public function UpdateTile():void
 		{
-			//Update the piece currently on this title if it is different
+			var newTeam:int = MatchMgr.GetInstance().GetTileTeam(m_xInd, m_yInd);
+			var newType:int = MatchMgr.GetInstance().GetTileType(m_xInd, m_yInd);
+			
+			//Update the image only if needed
+			if (newType != m_pieceType)
+			{
+				m_pieceType = newType;
+				
+				//Clear the image
+				if (m_pieceImage)
+				{
+					this.removeChild(m_pieceImage);
+					m_pieceImage = null;
+				}
+				
+				if (newType != Constants.TYPE_NO_PIECE)
+				{
+					m_pieceImage = GetBitmapByPieceType(newType);
+					this.addChild(m_pieceImage);
+				}
+			}
+			
+			//Update the team filter if needed
+			if (newTeam != m_pieceTeam && newTeam != Constants.TEAM_NONE)
+			{
+				m_pieceTeam = newTeam;
+				
+				m_pieceImage.filters = [(newTeam == Constants.TEAM_WHITE) ? 
+						Constants.WHITE_PIECE_FILTER : Constants.BLACK_PIECE_FILTER];
+			}
 		}
 		
+		private function GetBitmapByPieceType(type:int):Bitmap
+		{
+			switch(type)
+			{
+				case Constants.TYPE_PAWN:
+					return new Resources.PawnImage();
+				default:
+					return null;
+			}
+		}
 		
 		private function TileClickedCB(e:MouseEvent):void
 		{
 			trace('Tile (' + m_xInd + ',' + m_yInd + ') was clicked.');
+			MatchMgr.GetInstance().SelectTile(m_xInd, m_yInd);
 		}
 		
 	}

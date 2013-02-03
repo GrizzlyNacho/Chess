@@ -17,9 +17,21 @@ package model.pieces
 			return Constants.TYPE_NO_PIECE;
 		}
 		
+		public function GetAvailableMovesFrom(x:int, y:int):Array
+		{
+			//Override in children
+			return null;
+		}
+		
 		public function GetTeam():int 
 		{
 			return m_team;
+		}
+		
+		
+		protected function IsMoveInBounds(x:int, y:int):Boolean
+		{
+			return (x >= 0 && y >= 0 && x < Constants.BOARD_SIZE && y < Constants.BOARD_SIZE);
 		}
 		
 	}
