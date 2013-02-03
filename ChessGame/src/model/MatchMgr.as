@@ -5,6 +5,7 @@ package model
 	import model.pieces.Knight;
 	import model.pieces.Pawn;
 	import model.pieces.Piece;
+	import model.pieces.Queen;
 	import model.pieces.Rook;
 	import viewController.View;
 
@@ -273,23 +274,24 @@ package model
 				AddPieceToBoard(Constants.TYPE_PAWN, Constants.TEAM_BLACK, i, 1);
 				AddPieceToBoard(Constants.TYPE_PAWN, Constants.TEAM_WHITE, i, 6);
 			}
+			
 			AddPieceToBoard(Constants.TYPE_ROOK, Constants.TEAM_BLACK, 0, 0);
-			AddPieceToBoard(Constants.TYPE_ROOK, Constants.TEAM_BLACK, 7, 0);
-			AddPieceToBoard(Constants.TYPE_ROOK, Constants.TEAM_WHITE, 0, 7);
-			AddPieceToBoard(Constants.TYPE_ROOK, Constants.TEAM_WHITE, 7, 7);
-			
-			AddPieceToBoard(Constants.TYPE_KING, Constants.TEAM_BLACK, 4, 0);
-			AddPieceToBoard(Constants.TYPE_KING, Constants.TEAM_WHITE, 4, 7);
-			
 			AddPieceToBoard(Constants.TYPE_KNIGHT, Constants.TEAM_BLACK, 1, 0);
-			AddPieceToBoard(Constants.TYPE_KNIGHT, Constants.TEAM_BLACK, 6, 0);
-			AddPieceToBoard(Constants.TYPE_KNIGHT, Constants.TEAM_WHITE, 1, 7);
-			AddPieceToBoard(Constants.TYPE_KNIGHT, Constants.TEAM_WHITE, 6, 7);
-			
 			AddPieceToBoard(Constants.TYPE_BISHOP, Constants.TEAM_BLACK, 2, 0);
+			AddPieceToBoard(Constants.TYPE_QUEEN, Constants.TEAM_BLACK, 3, 0);
+			AddPieceToBoard(Constants.TYPE_KING, Constants.TEAM_BLACK, 4, 0);
 			AddPieceToBoard(Constants.TYPE_BISHOP, Constants.TEAM_BLACK, 5, 0);
+			AddPieceToBoard(Constants.TYPE_KNIGHT, Constants.TEAM_BLACK, 6, 0);
+			AddPieceToBoard(Constants.TYPE_ROOK, Constants.TEAM_BLACK, 7, 0);
+			
+			AddPieceToBoard(Constants.TYPE_ROOK, Constants.TEAM_WHITE, 0, 7);
+			AddPieceToBoard(Constants.TYPE_KNIGHT, Constants.TEAM_WHITE, 1, 7);
 			AddPieceToBoard(Constants.TYPE_BISHOP, Constants.TEAM_WHITE, 2, 7);
+			AddPieceToBoard(Constants.TYPE_QUEEN, Constants.TEAM_WHITE, 3, 7);
+			AddPieceToBoard(Constants.TYPE_KING, Constants.TEAM_WHITE, 4, 7);
 			AddPieceToBoard(Constants.TYPE_BISHOP, Constants.TEAM_WHITE, 5, 7);
+			AddPieceToBoard(Constants.TYPE_KNIGHT, Constants.TEAM_WHITE, 6, 7);
+			AddPieceToBoard(Constants.TYPE_ROOK, Constants.TEAM_WHITE, 7, 7);
 		}
 		
 		private function AddPieceToBoard(type:int, team:int, x:int, y:int):void
@@ -308,6 +310,9 @@ package model
 					break;
 				case Constants.TYPE_BISHOP:
 					newPiece = new Bishop(team, x, y);
+					break;
+				case Constants.TYPE_QUEEN:
+					newPiece = new Queen(team, x, y);
 					break;
 				case Constants.TYPE_KING:
 					newPiece = new King(team, x, y);
