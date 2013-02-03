@@ -4,8 +4,8 @@ package
 	
 	//Track all constants associated with a match of chess in one place
 	public class Constants 
-	{
-		//Commoon Constants
+	{	
+		//Common Constants
 		public static const BOARD_SIZE:int = 8;
 		
 		public static const TEAM_NONE:int = -1;

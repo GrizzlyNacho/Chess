@@ -1,5 +1,7 @@
 package model.pieces 
 {
+	import model.MatchMgr;
+	
 	public class King extends Piece 
 	{
 		
@@ -28,12 +30,33 @@ package model.pieces
 		{
 			if (!m_hasMoved && Math.abs(x - m_xPos) > 1)
 			{
-				//Castling is happening. 
-				//Signal the associated Rook
+				//Castling is happening. Cue the Manager
+				if (x > m_xPos)
+				{
+					MatchMgr.GetInstance().TriggerCastlingOnRook(
+						MatchMgr.GetInstance().GetTileIndex(7, m_yPos), MatchMgr.GetInstance().GetTileIndex(x - 1, m_yPos));
+				}
+				else
+				{
+					MatchMgr.GetInstance().TriggerCastlingOnRook(
+						MatchMgr.GetInstance().GetTileIndex(0, m_yPos), MatchMgr.GetInstance().GetTileIndex(x + 1, m_yPos));
+				}
+				
 			}
 			super.MovePiece(x, y);
 		}
 		
+		override public function CanMove(index:int):Boolean
+		{
+			var x:int = index % Constants.BOARD_SIZE;
+			//There are watch spaces in the king's possible tile list.
+			//We have to filter those out when it comes to determining moves
+			if (Math.abs(x - m_xPos) > 2)
+			{
+				return false;
+			}
+			return m_possibleTiles.indexOf(index) >= 0;
+		}
 		
 		override protected function UpdateAvailableMoves():void
 		{
@@ -49,10 +72,47 @@ package model.pieces
 			AddIfValidAttackOrMove(m_xPos - 1, m_yPos + 1);
 			AddIfValidAttackOrMove(m_xPos - 1, m_yPos - 1);
 			
-			//Castling can only happen if:
-			// - Neither the rook nor the king have moved
-			// - the tiles between the king and the rook are unoccupied 
-			// - the tiles the king crosses would not place the king in check.
+			//Add teh castling options
+			if (!m_hasMoved)
+			{
+				//Add the rook locations to make sure to update when they change
+				m_possibleTiles.push(MatchMgr.GetInstance().GetTileIndex(0, m_yPos));
+				m_possibleTiles.push(MatchMgr.GetInstance().GetTileIndex(7, m_yPos));
+				
+				AddCastlingToRookAt(0, m_yPos);
+				AddCastlingToRookAt(7, m_yPos);
+			}
+		}
+		
+		private function AddCastlingToRookAt(x:int, y:int):void
+		{
+			//We don't need to check team as enemy rooks would have had to move
+			if(!MatchMgr.GetInstance().GetTileHasMoved(x, y)
+					&& MatchMgr.GetInstance().GetTileType(x, y) == Constants.TYPE_ROOK)
+			{
+				var direction:int = (x > m_xPos) ? 1 : -1;
+				
+				//Determine if the spaces between are empty
+				var canCastle:Boolean = true;
+				for (var i:int = m_xPos + direction; i < Constants.BOARD_SIZE && i >= 0; i += direction)
+				{
+					var tileType:int = MatchMgr.GetInstance().GetTileType(i, m_yPos);
+					if (tileType != Constants.TYPE_NO_PIECE
+						&& (tileType != Constants.TYPE_ROOK || MatchMgr.GetInstance().GetTileHasMoved(i, m_yPos)))
+					{
+						canCastle = false;
+					}
+				}
+				
+				//Are any of the spaces involved for the king in check?
+				if (canCastle 
+					&& !MatchMgr.GetInstance().IsTileInCheck(m_team, MatchMgr.GetInstance().GetTileIndex(m_xPos + direction, m_yPos))
+					&& !MatchMgr.GetInstance().IsTileInCheck(m_team, MatchMgr.GetInstance().GetTileIndex(m_xPos + 2 * direction, m_yPos))
+					&& !MatchMgr.GetInstance().IsTileInCheck(m_team, MatchMgr.GetInstance().GetTileIndex(m_xPos, m_yPos)))
+				{
+					m_possibleTiles.push(MatchMgr.GetInstance().GetTileIndex(m_xPos + 2 * direction, m_yPos));
+				}
+			}
 		}
 	}
 

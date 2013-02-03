@@ -101,6 +101,11 @@ package model.pieces
 			return MatchMgr.GetInstance().GetTileIndex(m_xPos, m_yPos);
 		}
 		
+		public function GetHasMoved():Boolean 
+		{
+			return m_hasMoved;
+		}
+		
 		
 		//Add all spaces that can be moved to, defended, or captured to possible moves
 		protected function UpdateAvailableMoves():void

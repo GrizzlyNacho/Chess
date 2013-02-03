@@ -164,6 +164,55 @@ package model
 			return x + y * Constants.BOARD_SIZE;
 		}
 		
+		public function GetTileHasMoved(x:int, y:int):Boolean 
+		{
+			var piece:Piece = (m_boardState[GetTileIndex(x, y)] as Piece);
+			if (piece != null)
+			{
+				return piece.GetHasMoved();
+			}
+			return false;
+		}
+		
+		public function IsTileInCheck(owningTeam:int, tile:int):Boolean
+		{
+			var enemyTeamList:Array = null;
+			if (owningTeam == Constants.TEAM_WHITE)
+			{
+				enemyTeamList = m_blackPieces;
+			}
+			else if (owningTeam == Constants.TEAM_BLACK)
+			{
+				enemyTeamList = m_whitePieces;
+			}
+			
+			for (var i:int = 0; enemyTeamList != null && i < enemyTeamList.length; i++)
+			{
+				if ((enemyTeamList[i] as Piece).CanAttack(tile))
+				{
+					return true;
+				}
+			}
+			return false;
+		}
+		
+		public function TriggerCastlingOnRook(rookIndex:int, rookDestination:int):void 
+		{
+			var rook:Rook = m_boardState[rookIndex] as Rook;
+			if (rook == null)
+			{
+				//Bail out. This can be a result of the preemptive checking on moves
+				return;
+			}
+			
+			var destinationX:int = rookDestination % Constants.BOARD_SIZE;
+			var destinationY:int = rookDestination / Constants.BOARD_SIZE;
+			rook.MovePiece(destinationX, destinationY);
+			m_boardState[rook.GetLocation()] = rook;
+			m_boardState[rookIndex] = null;
+		}
+		
+		
 		
 		private function UpdateMoves(team:int, fromIndex:int, toIndex:int):void
 		{
@@ -222,7 +271,6 @@ package model
 				AddPieceToBoard(Constants.TYPE_PAWN, Constants.TEAM_BLACK, i, 1);
 				AddPieceToBoard(Constants.TYPE_PAWN, Constants.TEAM_WHITE, i, 6);
 			}
-			
 			AddPieceToBoard(Constants.TYPE_ROOK, Constants.TEAM_BLACK, 0, 0);
 			AddPieceToBoard(Constants.TYPE_ROOK, Constants.TEAM_BLACK, 7, 0);
 			AddPieceToBoard(Constants.TYPE_ROOK, Constants.TEAM_WHITE, 0, 7);
@@ -360,25 +408,13 @@ package model
 		
 		private function IsTeamInCheck(team:int):Boolean
 		{
-			var allyKingLocation:int = -1;
-			var enemyTeamList:Array = null;
 			if (team == Constants.TEAM_WHITE)
 			{
-				enemyTeamList = m_blackPieces;
-				allyKingLocation = m_whiteKing.GetLocation();
+				return IsTileInCheck(team, m_whiteKing.GetLocation());
 			}
 			else if (team == Constants.TEAM_BLACK)
 			{
-				enemyTeamList = m_whitePieces;
-				allyKingLocation = m_blackKing.GetLocation();
-			}
-			
-			for (var i:int = 0; enemyTeamList != null && i < enemyTeamList.length; i++)
-			{
-				if ((enemyTeamList[i] as Piece).CanAttack(allyKingLocation))
-				{
-					return true;
-				}
+				return IsTileInCheck(team, m_blackKing.GetLocation());
 			}
 			return false;
 		}
