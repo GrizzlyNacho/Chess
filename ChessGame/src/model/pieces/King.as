@@ -4,10 +4,12 @@ package model.pieces
 	
 	public class King extends Piece 
 	{
+		private var m_watchTiles:Array = null;
 		
 		public function King(team:int, x:int, y:int) 
 		{
 			super(team, x, y);
+			m_watchTiles = new Array();
 		}
 		
 		override public function Clone():Piece
@@ -46,6 +48,16 @@ package model.pieces
 			super.MovePiece(x, y);
 		}
 		
+		//King also has to consider the watch list
+		override public function CheckUpdate(movedFromIndex:int, movedToIndex:int):void
+		{
+			if ((m_possibleTiles && (m_possibleTiles.indexOf(movedFromIndex) >= 0 || m_possibleTiles.indexOf(movedToIndex) >= 0))
+				|| (m_watchTiles && (m_watchTiles.indexOf(movedFromIndex) >= 0 || m_watchTiles.indexOf(movedToIndex) >= 0)))
+			{
+				UpdateAvailableMoves();
+			}
+		}
+		
 		override public function CanMove(index:int):Boolean
 		{
 			var x:int = index % Constants.BOARD_SIZE;
@@ -61,6 +73,9 @@ package model.pieces
 		override protected function UpdateAvailableMoves():void
 		{
 			m_possibleTiles.splice(0, m_possibleTiles.length);
+			m_watchTiles.splice(0, m_watchTiles.length);
+			
+			
 			
 			//Add one tile in each direction
 			AddIfValidAttackOrMove(m_xPos + 1, m_yPos);
@@ -74,10 +89,12 @@ package model.pieces
 			
 			//Add teh castling options
 			if (!m_hasMoved)
-			{
-				//Add the rook locations to make sure to update when they change
-				m_possibleTiles.push(MatchMgr.GetInstance().GetTileIndex(0, m_yPos));
-				m_possibleTiles.push(MatchMgr.GetInstance().GetTileIndex(7, m_yPos));
+			{	
+				//Watch the home row for updates for the king (as any updates may change the castling regs.
+				for (var i:int = 0; i < Constants.BOARD_SIZE; i++)
+				{
+					m_watchTiles.push(MatchMgr.GetInstance().GetTileIndex(i, m_yPos));
+				}
 				
 				AddCastlingToRookAt(0, m_yPos);
 				AddCastlingToRookAt(7, m_yPos);
