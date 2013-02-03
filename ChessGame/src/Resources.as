@@ -16,6 +16,9 @@ package
 		[Embed (source = "../assets/knight.png")]
 		public static const KnightImage:Class;
 		
+		[Embed (source = "../assets/bishop.png")]
+		public static const BishopImage:Class;
+		
 		[Embed (source = "../assets/selection.png")]
 		public static const SelectionImage:Class;
 	}

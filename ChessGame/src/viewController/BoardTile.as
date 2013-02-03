@@ -102,6 +102,8 @@ package viewController
 					return new Resources.KnightImage();
 				case Constants.TYPE_KING:
 					return new Resources.KingImage();
+				case Constants.TYPE_BISHOP:
+					return new Resources.BishopImage();
 				default:
 					return null;
 			}
