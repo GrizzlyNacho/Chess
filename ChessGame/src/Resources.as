@@ -10,6 +10,9 @@ package
 		[Embed (source = "../assets/rook.png")]
 		public static const RookImage:Class;
 		
+		[Embed (source = "../assets/king.png")]
+		public static const KingImage:Class;
+		
 		[Embed (source = "../assets/selection.png")]
 		public static const SelectionImage:Class;
 	}

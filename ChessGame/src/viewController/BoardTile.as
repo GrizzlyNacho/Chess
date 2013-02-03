@@ -98,6 +98,8 @@ package viewController
 					return new Resources.PawnImage();
 				case Constants.TYPE_ROOK:
 					return new Resources.RookImage();
+				case Constants.TYPE_KING:
+					return new Resources.KingImage();
 				default:
 					return null;
 			}

@@ -1,5 +1,6 @@
 package model 
 {
+	import model.pieces.King;
 	import model.pieces.Pawn;
 	import model.pieces.Piece;
 	import model.pieces.Rook;
@@ -226,6 +227,8 @@ package model
 			AddPieceToBoard(Constants.TYPE_ROOK, Constants.TEAM_BLACK, 7, 0);
 			AddPieceToBoard(Constants.TYPE_ROOK, Constants.TEAM_WHITE, 0, 7);
 			AddPieceToBoard(Constants.TYPE_ROOK, Constants.TEAM_WHITE, 7, 7);
+			AddPieceToBoard(Constants.TYPE_KING, Constants.TEAM_BLACK, 4, 0);
+			AddPieceToBoard(Constants.TYPE_KING, Constants.TEAM_WHITE, 4, 7);
 		}
 		
 		private function AddPieceToBoard(type:int, team:int, x:int, y:int):void
@@ -238,6 +241,9 @@ package model
 					break;
 				case Constants.TYPE_ROOK:
 					newPiece = new Rook(team, x, y);
+					break;
+				case Constants.TYPE_KING:
+					newPiece = new King(team, x, y);
 					break;
 				default:
 					newPiece = null;
