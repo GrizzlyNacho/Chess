@@ -25,7 +25,7 @@ package model.pieces
 			AddIfValidUnoccupiedMove(x, y + direction, moves);
 			
 			//Test the special first move (x, y + 2*direction) into an unoccupied space
-			if (!m_hasMoved)
+			if (!m_hasMoved && MatchMgr.GetInstance().GetTileType(x, y + direction) == Constants.TYPE_NO_PIECE)
 			{
 				AddIfValidUnoccupiedMove(x, y + 2 * direction, moves);
 			}
