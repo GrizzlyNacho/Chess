@@ -32,31 +32,20 @@ package model.pieces
 			//Try each diagonal
 			//South East
 			var i:int = 1;
-			while (AddIfValidAttackOrMove(m_xPos + i, m_yPos + i))
-			{
-				i++;
-			}
+			for (i = 1; AddIfValidAttackOrMove(m_xPos + i, m_yPos + i); i++)
+			{ }
 			
 			//North East
-			i = 1;
-			while (AddIfValidAttackOrMove(m_xPos + i, m_yPos - i))
-			{
-				i++;
-			}
+			for (i = 1; AddIfValidAttackOrMove(m_xPos + i, m_yPos - i); i++)
+			{ }
 			
 			//South West
-			i = 1;
-			while (AddIfValidAttackOrMove(m_xPos - i, m_yPos + i))
-			{
-				i++;
-			}
+			for (i = 1; AddIfValidAttackOrMove(m_xPos - i, m_yPos + i); i++)
+			{ }
 			
 			//North West
-			i = 1;
-			while (AddIfValidAttackOrMove(m_xPos - i, m_yPos - i))
-			{
-				i++;
-			}
+			for (i = 1; AddIfValidAttackOrMove(m_xPos - i, m_yPos - i); i++)
+			{ }
 		}
 		
 	}
