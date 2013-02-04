@@ -4,6 +4,7 @@ package
 	//Embedded as there are not many images and there is no resource manager yet
 	public class Resources 
 	{
+		//Pieces
 		[Embed (source = "../assets/pawn.png")]
 		public static const PawnImage:Class;
 		
@@ -22,8 +23,15 @@ package
 		[Embed (source = "../assets/queen.png")]
 		public static const QueenImage:Class;
 		
+		//UI Elements
 		[Embed (source = "../assets/selection.png")]
 		public static const SelectionImage:Class;
+		
+		[Embed (source = "../assets/blackTurn.png")]
+		public static const BlackTurnImage:Class;
+		
+		[Embed (source = "../assets/whiteTurn.png")]
+		public static const WhiteTurnImage:Class;
 	}
 
 }

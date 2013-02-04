@@ -24,6 +24,7 @@ package
 		public static const TILE_SIZE_PIXELS:int = 75;
 		public static const COLOUR_LIGHT_TILE:uint = 0xFFEBCD;
 		public static const COLOUR_DARK_TILE:uint = 0x855E42;
+		public static const COLOUR_INFO_PANEL_BG:uint = 0x4682b4;
 		public static function get WHITE_PIECE_FILTER():ColorMatrixFilter
 		{
 			return new ColorMatrixFilter([1.2, 0, 0, 0, 0,

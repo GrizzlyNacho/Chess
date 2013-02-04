@@ -10,6 +10,12 @@ package viewController
 		{
 			super();
 			
+			//Add the background rectangle
+			this.graphics.clear();
+			this.graphics.beginFill(0x000000);
+			this.graphics.drawRoundRect(5, 5, 10 + Constants.BOARD_SIZE * Constants.TILE_SIZE_PIXELS, 10 + Constants.BOARD_SIZE * Constants.TILE_SIZE_PIXELS, 10, 10);
+			this.graphics.endFill();
+			
 			//Initialize the array of tiles
 			//They are set up so that (0,0) is the top left, (1,0) is immediately to the right, and (0,1) is immediately below
 			m_tiles = new Array();
@@ -20,6 +26,11 @@ package viewController
 				{
 					var newTile:BoardTile = new BoardTile(col, row, lightTile);
 					m_tiles.push(newTile);
+					
+					//Add the offset
+					newTile.x += 10;
+					newTile.y += 10;
+					
 					this.addChild(newTile);
 					lightTile = !lightTile;
 				}

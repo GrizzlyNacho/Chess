@@ -6,12 +6,12 @@
     <movie input="" />
     <movie path="bin\ChessGame.swf" />
     <movie fps="30" />
-    <movie width="800" />
-    <movie height="600" />
+    <movie width="875" />
+    <movie height="620" />
     <movie version="10" />
     <movie minorVersion="1" />
     <movie platform="Flash Player" />
-    <movie background="#FFFFFF" />
+    <movie background="#B0C4DE" />
   </output>
   <!-- Other classes to be compiled into your SWF -->
   <classpaths>
