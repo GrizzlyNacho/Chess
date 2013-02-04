@@ -27,6 +27,8 @@ package model
 		private var m_currentSelectedPiece:Piece = null;
 		
 		private var m_pawnPendingPromotion:Piece = null;
+		private var m_enPassantAvailableForTeam:int = Constants.TEAM_NONE;
+		private var m_enPassantTileIndexAvailable:int = -1;
 		
 		private var m_gameState:int = Constants.GAME_STATE_REG;
 		private var m_turnsSincePawnOrCapture:int = 0;
@@ -125,6 +127,18 @@ package model
 					ClearStateHistory();
 				}
 				
+				//Catch the en passant case
+				var originX:int = m_currentSelectedPiece.GetLocation() % Constants.BOARD_SIZE;
+				var originY:int = m_currentSelectedPiece.GetLocation() / Constants.BOARD_SIZE;
+				if (m_currentSelectedPiece.GetType() == Constants.TYPE_PAWN && GetTileType(x, y) == Constants.TYPE_NO_PIECE
+					&& originX != x && GetTileType(x, originY) == Constants.TYPE_PAWN 
+					&& GetTileTeam(x, originY) != m_currentSelectedPiece.GetTeam())
+				{
+					//En Passant! Capture that passing pawn.
+					CapturePiece(x, originY);
+					m_boardState[GetTileIndex(x, originY)] = null;
+				}
+				
 				var origin:int = m_currentSelectedPiece.GetLocation();
 				ExecuteMove(m_currentSelectedPiece, targetedPiece, origin, x, y);
 				
@@ -147,6 +161,12 @@ package model
 		
 		public function EndTurn():void
 		{
+			if (m_enPassantAvailableForTeam == m_currentTeam)
+			{
+				m_enPassantAvailableForTeam = Constants.TEAM_NONE;
+				m_enPassantTileIndexAvailable = -1;
+			}
+			
 			m_turnsSincePawnOrCapture ++;
 			m_currentTeam = 1 - m_currentTeam;
 			m_currentSelectedPiece = null;
@@ -371,6 +391,40 @@ package model
 			
 			EndTurn();
 			UpdateAllViews();
+		}
+		
+		public function SignalEnPassant(movingPawnX:int, movingPawnY:int):void 
+		{
+			//Check either side for pawns that need to be signalled
+			var leftPawn:Pawn = m_boardState[GetTileIndex(movingPawnX - 1, movingPawnY)] as Pawn;
+			var rightPawn:Pawn = m_boardState[GetTileIndex(movingPawnX + 1, movingPawnY)] as Pawn;
+			var direction:int = (m_currentTeam == Constants.TEAM_WHITE) ? 1 : -1;
+			
+			if (leftPawn || rightPawn)
+			{
+				m_enPassantTileIndexAvailable = GetTileIndex(movingPawnX, movingPawnY + direction);
+				m_enPassantAvailableForTeam = 1 - m_currentTeam;
+			}
+			
+			if (leftPawn && leftPawn.GetTeam() != m_currentTeam)
+			{
+				leftPawn.AddEnPassant(movingPawnX, movingPawnY + direction);
+			}
+			
+			if (rightPawn && rightPawn.GetTeam() != m_currentTeam)
+			{
+				rightPawn.AddEnPassant(movingPawnX, movingPawnY + direction);
+			}
+		}
+		
+		public function IsEnPassantAvailable(team:int):Boolean 
+		{
+			return team == m_enPassantAvailableForTeam;
+		}
+		
+		public function GetAvailableEnPassantSpace():int
+		{
+			return m_enPassantTileIndexAvailable;
 		}
 		
 		

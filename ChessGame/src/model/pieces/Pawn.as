@@ -51,6 +51,13 @@ package model.pieces
 			{
 				return m_possibleTiles.indexOf(index) >= 0;
 			}
+			else if (MatchMgr.GetInstance().IsEnPassantAvailable(m_team) 
+				&& m_possibleTiles.indexOf(index) >= 0
+				&& MatchMgr.GetInstance().GetAvailableEnPassantSpace() == index)
+			{
+				//En passant case
+				return true;
+			}
 			return false;
 		}
 		
@@ -69,6 +76,21 @@ package model.pieces
 			AddIfValidAttackOrMove(m_xPos + 1, m_yPos + direction)
 			
 			//FIXME: En Passant Case
+		}
+		
+		override public function MovePiece(x:int, y:int):void
+		{
+			//The first leap is the only time when en passant may be triggered
+			if (!m_hasMoved && Math.abs(y - m_yPos) > 1)
+			{
+				MatchMgr.GetInstance().SignalEnPassant(x, y);
+			}
+			super.MovePiece(x, y);
+		}
+		
+		public function AddEnPassant(targetX:int, targetY:int):void 
+		{
+			m_possibleTiles.push(MatchMgr.GetInstance().GetTileIndex(targetX, targetY));
 		}
 		
 	}
