@@ -106,6 +106,20 @@ package model.pieces
 			return m_hasMoved;
 		}
 		
+		public function HasValidMove():Boolean 
+		{
+			for (var move:int = 0; move < m_possibleTiles.length; move++)
+			{
+				var x:int = m_possibleTiles[move] % Constants.BOARD_SIZE;
+				var y:int = m_possibleTiles[move] / Constants.BOARD_SIZE;
+				if (MatchMgr.GetInstance().IsValidMove(this, x, y))
+				{
+					return true;
+				}
+			}
+			return false;
+		}
+		
 		
 		//Add all spaces that can be moved to, defended, or captured to possible moves
 		protected function UpdateAvailableMoves():void

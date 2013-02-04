@@ -27,6 +27,7 @@ package model
 		private var m_currentSelectedPiece:Piece = null;
 		
 		private var m_teamInCheck:int = Constants.TEAM_NONE;
+		private var m_teamWithNoMoves:int = Constants.TEAM_NONE;
 		
 		//Track all pieces for each player
 		private var m_whitePieces:Array = null;
@@ -93,10 +94,10 @@ package model
 				trace('Piece selected.');
 				m_currentSelectedPiece = targetedPiece;
 			}
-			else if (m_currentSelectedPiece != null && IsValidMoveForCurrentPiece(x,y))
+			else if (m_currentSelectedPiece != null && IsValidMove(m_currentSelectedPiece, x, y))
 			{
 				var origin:int = m_currentSelectedPiece.GetLocation();
-				ExecuteMove(targetedPiece, origin, x, y);
+				ExecuteMove(m_currentSelectedPiece, targetedPiece, origin, x, y);
 				
 				//Update the remaining pieces
 				UpdateMoves(Constants.TEAM_BLACK, origin, GetTileIndex(x, y));
@@ -115,24 +116,24 @@ package model
 			m_currentTeam = 1 - m_currentTeam;
 			m_currentSelectedPiece = null;
 			
-			if (IsTeamInCheck(m_currentTeam))
-			{
-				trace('Team ' + m_currentTeam + ' is in CHECK!');
-			}
-			
 			//Determine Check (we only care about the current team)
+			m_teamInCheck = Constants.TEAM_NONE;
 			if (IsTeamInCheck(m_currentTeam))
 			{
 				m_teamInCheck = m_currentTeam;
-			}
-			else
-			{
-				m_teamInCheck = Constants.TEAM_NONE;
+				trace('Team ' + m_currentTeam + ' is in CHECK!');
 			}
 			
-			//Check-Mate
-			//Check
-			//Draw
+			//Determine number of available moves
+			var noMoves:Boolean = AreNoMovesAvailable();
+			m_teamWithNoMoves = Constants.TEAM_NONE;
+			if (noMoves)
+			{
+				m_teamWithNoMoves = m_currentTeam;
+				trace('Team ' + m_currentTeam + ' has no moves!');
+			}
+			
+			//Draw conditions 
 		}
 		
 		public function GetTileTeam(x:int, y:int):int
@@ -230,7 +231,63 @@ package model
 			return m_teamInCheck != Constants.TEAM_NONE;
 		}
 		
+		//Assumes current team
+		//This has the potential to be computationally expensive so use it sparingly when possible.
+		public function IsValidMove(selectedPiece:Piece, x:int, y:int):Boolean
+		{
+			var targetTeam:int = GetTileTeam(x, y);
+			var targetIsPiece:Boolean = GetTileType(x, y) != Constants.TYPE_NO_PIECE;
+			
+			//Can't move onto teammates
+			if (targetIsPiece && targetTeam == m_currentTeam)
+			{
+				return false;
+			}
+			
+			if (targetIsPiece && selectedPiece.CanAttack(GetTileIndex(x, y)))
+			{
+				
+				return !IsSelfHarmingMove(selectedPiece, x, y);
+			}
+
+			if(!targetIsPiece && selectedPiece.CanMove(GetTileIndex(x, y)))
+			{
+				return !IsSelfHarmingMove(selectedPiece, x, y);
+			}
+			return false
+		}
 		
+		public function IsInCheckMate():Boolean 
+		{
+			return m_teamInCheck != Constants.TEAM_NONE
+				&& m_teamWithNoMoves != Constants.TEAM_NONE;
+		}
+		
+		
+		
+		private function AreNoMovesAvailable():Boolean 
+		{
+			var teamArray:Array = null;
+			if (m_currentTeam == Constants.TEAM_WHITE)
+			{
+				teamArray = m_whitePieces;
+			}
+			else if (m_currentTeam == Constants.TEAM_BLACK)
+			{
+				teamArray = m_blackPieces;
+			}
+			
+			//Cycle all pieces and test each possible move.
+			for (var i:int = 0; i < teamArray.length; i++)
+			{
+				var currentPiece:Piece = teamArray[i] as Piece;
+				if (currentPiece.HasValidMove())
+				{
+					return false;
+				}
+			}
+			return true;
+		}
 		
 		private function UpdateMoves(team:int, fromIndex:int, toIndex:int):void
 		{
@@ -248,30 +305,6 @@ package model
 			{
 				(pieces[i] as Piece).CheckUpdate(fromIndex, toIndex);
 			}
-		}
-		
-		private function IsValidMoveForCurrentPiece(x:int, y:int):Boolean
-		{
-			var targetTeam:int = GetTileTeam(x, y);
-			var targetIsPiece:Boolean = GetTileType(x, y) != Constants.TYPE_NO_PIECE;
-			
-			//Can't move onto teammates
-			if (targetIsPiece && targetTeam == m_currentTeam)
-			{
-				return false;
-			}
-			
-			if (targetIsPiece && m_currentSelectedPiece.CanAttack(GetTileIndex(x, y)))
-			{
-				
-				return !IsSelfHarmingMove(x,y);
-			}
-
-			if(!targetIsPiece && m_currentSelectedPiece.CanMove(GetTileIndex(x, y)))
-			{
-				return !IsSelfHarmingMove(x,y);
-			}
-			return false
 		}
 		
 		private function UpdateAllViews():void
@@ -382,26 +415,26 @@ package model
 			capturedPiece = null;
 		}
 		
-		private function ExecuteMove(selectedPiece:Piece, origin:int, x:int, y:int):void 
+		private function ExecuteMove(selectedPiece:Piece, targetedPiece:Piece, origin:int, x:int, y:int):void 
 		{
-			if (selectedPiece != null && selectedPiece.GetTeam() != m_currentTeam)
+			if (targetedPiece != null && targetedPiece.GetTeam() != m_currentTeam)
 			{
 				CapturePiece(x, y);
 			}
 			
 			//Move the current piece and remove it from its previous space
-			m_boardState[GetTileIndex(x, y)] = m_currentSelectedPiece;
+			m_boardState[GetTileIndex(x, y)] = selectedPiece;
 			m_boardState[origin] = null;
-			m_currentSelectedPiece.MovePiece(x, y);
+			selectedPiece.MovePiece(x, y);
 		}
 		
 		//Tests if moving the currently selected piece to the target location would put the moving player in check
 		//Assumes that the move is otherwise perfectly valid
-		private function IsSelfHarmingMove(x:int, y:int):Boolean
+		private function IsSelfHarmingMove(selectedPiece:Piece, x:int, y:int):Boolean
 		{
 			//Grab backups of any data that could be lost
-			var origin:int = m_currentSelectedPiece.GetLocation();
-			var selectedCopy:Piece = m_currentSelectedPiece.Clone();
+			var origin:int = selectedPiece.GetLocation();
+			var selectedCopy:Piece = selectedPiece.Clone();
 			var pieceAtDestinationCopy:Piece = null;
 			if (m_boardState[GetTileIndex(x, y)] != null)
 			{
@@ -409,7 +442,7 @@ package model
 			}
 			
 			//Perform the action to test
-			ExecuteMove(pieceAtDestinationCopy, origin, x, y);
+			ExecuteMove(selectedPiece, pieceAtDestinationCopy, origin, x, y);
 			var opposingTeam:int = 1 - m_currentTeam;
 			UpdateMoves(opposingTeam, origin, GetTileIndex(x, y));
 			
@@ -418,10 +451,10 @@ package model
 
 			//Reset the position and state of the selected piece
 			//possible moves weren't updated for the current team, so everything should be consistent
-			m_currentSelectedPiece.SetFlagsTo(selectedCopy);
+			selectedPiece.SetFlagsTo(selectedCopy);
 			selectedCopy.Cleanup();
 			selectedCopy = null;
-			m_boardState[origin] = m_currentSelectedPiece;
+			m_boardState[origin] = selectedPiece;
 			if (pieceAtDestinationCopy == null) //It was just a move. Not a capture
 			{
 				m_boardState[GetTileIndex(x, y)] = null;

@@ -68,6 +68,7 @@ package viewController
 			}
 			
 			m_checkImage.visible = MatchMgr.GetInstance().IsInCheck();
+			m_checkMateImage.visible = MatchMgr.GetInstance().IsInCheckMate();
 		}
 		
 		public function Cleanup():void
