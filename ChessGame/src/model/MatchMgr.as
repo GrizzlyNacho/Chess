@@ -130,6 +130,7 @@ package model
 			m_gameState = Constants.GAME_STATE_REG;
 			var noMoves:Boolean = AreNoMovesAvailable();
 			var inCheck:Boolean = IsTeamInCheck(m_currentTeam);
+			var enoughMaterials:Boolean = HasEnoughPiecesToWin(m_whitePieces) || HasEnoughPiecesToWin(m_blackPieces);
 			
 			if (noMoves && inCheck)
 			{
@@ -138,6 +139,10 @@ package model
 			else if (m_turnsSincePawnOrCapture >= Constants.TURNS_WITHOUT_EVENT_TO_DRAW)
 			{
 				m_gameState = Constants.GAME_STATE_DRAW_50;
+			}
+			else if (!enoughMaterials)
+			{
+				m_gameState = Constants.GAME_STATE_DRAW_INSUF_MATERIAL;
 			}
 			else if (noMoves)
 			{
@@ -495,6 +500,34 @@ package model
 			else if (team == Constants.TEAM_BLACK)
 			{
 				return IsTileInCheck(team, m_blackKing.GetLocation());
+			}
+			return false;
+		}
+		
+		private function HasEnoughPiecesToWin(teamPieces:Array):Boolean 
+		{
+			var spacesCovered:int = 0;
+			for (var i:int = 0; i < teamPieces.length; i++)
+			{
+				var pieceType:int = (teamPieces[i] as Piece).GetType();
+				if (pieceType == Constants.TYPE_PAWN
+					|| pieceType == Constants.TYPE_ROOK
+					|| pieceType == Constants.TYPE_QUEEN)
+				{
+					return true;
+				}
+				else if (pieceType == Constants.TYPE_BISHOP
+					|| pieceType == Constants.TYPE_KNIGHT)
+				{
+					spacesCovered++;
+					
+					//The king can cover two spaces, but a minimum of 4 covered spaces are required for a checkmate.
+					//4 = The space the enemy king is on and the minimum case of the corner where there are only 3 other moves
+					if (spacesCovered >= 2)
+					{
+						return true;
+					}
+				}
 			}
 			return false;
 		}
