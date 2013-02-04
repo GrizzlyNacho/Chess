@@ -70,7 +70,7 @@ package viewController
 			}
 			
 			//Update the team filter on the piece image if needed
-			if (newTeam != m_pieceTeam && newTeam != Constants.TEAM_NONE)
+			if (newTeam != Constants.TEAM_NONE)
 			{
 				m_pieceTeam = newTeam;
 				
