@@ -9,6 +9,9 @@ package viewController
 		private const c_drawHeight:int = 610;
 		
 		private var m_turnIndicators:Array = null;
+		private var m_checkImage:Bitmap = null;
+		private var m_checkMateImage:Bitmap = null;
+		private var m_drawImage:Bitmap = null;
 		
 		public function InfoPanel(x:int, y:int) 
 		{
@@ -22,6 +25,7 @@ package viewController
 			this.graphics.drawRoundRect(0, 0, c_drawWidth, c_drawHeight, 10, 10);
 			this.graphics.endFill();
 			
+			//Add the turn indicators
 			m_turnIndicators = new Array();
 			
 			var newBitmap:Bitmap = new Resources.BlackTurnImage();
@@ -37,6 +41,19 @@ package viewController
 			m_turnIndicators[Constants.TEAM_WHITE] = newBitmap;
 			this.addChild(newBitmap);
 			
+			//Add the end-game images
+			m_checkImage = new Resources.CheckImage();
+			m_checkImage.x = c_drawWidth / 2 - m_checkImage.width / 2;
+			m_checkImage.y = 200;
+			m_checkImage.visible = false;
+			this.addChild(m_checkImage);
+			
+			m_checkMateImage = new Resources.CheckMateImage();
+			m_checkMateImage.x = c_drawWidth / 2 - m_checkImage.width / 2;
+			m_checkMateImage.y = 320;
+			m_checkMateImage.visible = false;
+			this.addChild(m_checkMateImage);
+			
 			MatchMgr.GetInstance().RegisterView(this);
 		}
 		
@@ -49,6 +66,8 @@ package viewController
 				(m_turnIndicators[team] as Bitmap).visible = true;
 				(m_turnIndicators[1 - team] as Bitmap).visible = false;
 			}
+			
+			m_checkImage.visible = MatchMgr.GetInstance().IsInCheck();
 		}
 		
 		public function Cleanup():void

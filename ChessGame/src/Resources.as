@@ -32,6 +32,12 @@ package
 		
 		[Embed (source = "../assets/whiteTurn.png")]
 		public static const WhiteTurnImage:Class;
+		
+		[Embed (source = "../assets/checkFlag.png")]
+		public static const CheckImage:Class;
+	
+		[Embed (source = "../assets/checkMateFlag.png")]
+		public static const CheckMateImage:Class;
 	}
 
 }

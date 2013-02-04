@@ -24,8 +24,9 @@ package model
 		private var m_views:Array = null;
 		
 		private var m_currentTeam:int = Constants.TEAM_NONE;
-		
 		private var m_currentSelectedPiece:Piece = null;
+		
+		private var m_teamInCheck:int = Constants.TEAM_NONE;
 		
 		//Track all pieces for each player
 		private var m_whitePieces:Array = null;
@@ -119,7 +120,16 @@ package model
 				trace('Team ' + m_currentTeam + ' is in CHECK!');
 			}
 			
-			//End of game conditions should probably sit here.
+			//Determine Check (we only care about the current team)
+			if (IsTeamInCheck(m_currentTeam))
+			{
+				m_teamInCheck = m_currentTeam;
+			}
+			else
+			{
+				m_teamInCheck = Constants.TEAM_NONE;
+			}
+			
 			//Check-Mate
 			//Check
 			//Draw
@@ -213,6 +223,11 @@ package model
 			rook.MovePiece(destinationX, destinationY);
 			m_boardState[rook.GetLocation()] = rook;
 			m_boardState[rookIndex] = null;
+		}
+		
+		public function IsInCheck():Boolean 
+		{
+			return m_teamInCheck != Constants.TEAM_NONE;
 		}
 		
 		
