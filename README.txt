@@ -2,6 +2,11 @@ The game of Chess as written by Nathan Lutz
 
 To launch the game simply launch index.html in the bin directory or launch the swf directly. 
 
+Next Steps:
+ - Update the art for the pieces
+ - Add suggestion indicators for possible moves
+
+
 Design decisions:
  - Flash was used simply because of prior experience in flash
  - Model View Controller architecture as it provides isolation from the game state and the view of the game state. This could allow for AI implementation later on.
