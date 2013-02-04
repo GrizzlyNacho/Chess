@@ -17,6 +17,8 @@ package viewController
 		private var m_drawExplainText:TextField = null;
 		private var m_textFormat:TextFormat = null;
 		
+		private var m_promotionPicker:PromotionPicker = null;
+		
 		public function InfoPanel(x:int, y:int) 
 		{
 			this.x = x;
@@ -26,7 +28,8 @@ package viewController
 			//Draw the backdrop for the whole panel
 			this.graphics.clear();
 			this.graphics.beginFill(Constants.COLOUR_INFO_PANEL_BG);
-			this.graphics.drawRoundRect(0, 0, c_drawWidth, c_drawHeight, 10, 10);
+			this.graphics.drawRoundRect(0, 0, c_drawWidth, c_drawHeight, 
+				Constants.ROUND_RECT_ELIPSE_SIZE, Constants.ROUND_RECT_ELIPSE_SIZE);
 			this.graphics.endFill();
 			
 			//Add the turn indicators
@@ -75,6 +78,12 @@ package viewController
 			m_drawExplainText.width = c_drawWidth;
 			this.addChild(m_drawExplainText);
 			
+			m_promotionPicker = new PromotionPicker();
+			m_promotionPicker.x = c_drawWidth / 2 - 100;
+			m_promotionPicker.y = c_drawHeight / 2 - 100;
+			m_promotionPicker.visible = true;
+			this.addChild(m_promotionPicker);
+			
 			MatchMgr.GetInstance().RegisterView(this);
 		}
 		
@@ -92,6 +101,7 @@ package viewController
 			m_checkImage.visible = false;
 			m_checkMateImage.visible = false;
 			m_drawImage.visible = false;
+			m_promotionPicker.visible = false;
 			m_drawExplainText.text = "";
 			switch(gameState)
 			{
@@ -117,6 +127,9 @@ package viewController
 				case Constants.GAME_STATE_DRAW_STALEMATE:
 					m_drawImage.visible = true;
 					m_drawExplainText.text = "Stalemate!";
+					break;
+				case Constants.GAME_STATE_PROMOTE:
+					m_promotionPicker.visible = true;
 					break;
 			}
 			m_drawExplainText.setTextFormat(m_textFormat);

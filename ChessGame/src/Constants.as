@@ -21,6 +21,7 @@ package
 		public static const GAME_STATE_DRAW_INSUF_MATERIAL:int = 4;
 		public static const GAME_STATE_DRAW_3_REP:int = 		5;
 		public static const GAME_STATE_DRAW_STALEMATE:int = 	6;
+		public static const GAME_STATE_PROMOTE:int = 			7;
 		
 		public static const TYPE_NO_PIECE:int 	= 0;
 		public static const TYPE_PAWN:int 		= 1;
@@ -32,9 +33,11 @@ package
 		
 		//UIConstants
 		public static const TILE_SIZE_PIXELS:int = 75;
+		public static const ROUND_RECT_ELIPSE_SIZE:int = 10;
 		public static const COLOUR_LIGHT_TILE:uint = 0xFFEBCD;
 		public static const COLOUR_DARK_TILE:uint = 0x855E42;
 		public static const COLOUR_INFO_PANEL_BG:uint = 0x4682b4;
+		public static const COLOUR_PROMOTION_BG:uint = 0xFFFFFF;
 		public static function get WHITE_PIECE_FILTER():ColorMatrixFilter
 		{
 			return new ColorMatrixFilter([1.2, 0, 0, 0, 0,

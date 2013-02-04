@@ -13,7 +13,8 @@ package viewController
 			//Add the background rectangle
 			this.graphics.clear();
 			this.graphics.beginFill(0x000000);
-			this.graphics.drawRoundRect(5, 5, 10 + Constants.BOARD_SIZE * Constants.TILE_SIZE_PIXELS, 10 + Constants.BOARD_SIZE * Constants.TILE_SIZE_PIXELS, 10, 10);
+			this.graphics.drawRoundRect(5, 5, 10 + Constants.BOARD_SIZE * Constants.TILE_SIZE_PIXELS, 10 + Constants.BOARD_SIZE * Constants.TILE_SIZE_PIXELS,
+				Constants.ROUND_RECT_ELIPSE_SIZE, Constants.ROUND_RECT_ELIPSE_SIZE);
 			this.graphics.endFill();
 			
 			//Initialize the array of tiles

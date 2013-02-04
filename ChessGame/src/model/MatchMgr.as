@@ -26,6 +26,8 @@ package model
 		private var m_currentTeam:int = Constants.TEAM_NONE;
 		private var m_currentSelectedPiece:Piece = null;
 		
+		private var m_pawnPendingPromotion:Piece = null;
+		
 		private var m_gameState:int = Constants.GAME_STATE_REG;
 		private var m_turnsSincePawnOrCapture:int = 0;
 		
@@ -130,7 +132,14 @@ package model
 				UpdateMoves(Constants.TEAM_BLACK, origin, GetTileIndex(x, y));
 				UpdateMoves(Constants.TEAM_WHITE, origin, GetTileIndex(x, y));
 				
-				EndTurn();
+				if (CheckForPendingPromotion())
+				{
+					m_gameState = Constants.GAME_STATE_PROMOTE;
+				}
+				else
+				{
+					EndTurn();
+				}
 			}
 			
 			UpdateAllViews();
@@ -314,6 +323,56 @@ package model
 			return false
 		}
 		
+		public function SelectPromotion(pieceTypeChosen:int):void
+		{
+			if (m_pawnPendingPromotion != null)
+			{
+				var teamPieces:Array = null;
+				if (m_currentTeam == Constants.TEAM_WHITE)
+				{
+					teamPieces = m_whitePieces;
+				}
+				else
+				{
+					teamPieces = m_blackPieces;
+				}
+				
+				//Generate the new piece
+				var promotedPiece:Piece = null;
+				var x:int = m_pawnPendingPromotion.GetLocation() % Constants.BOARD_SIZE;
+				var y:int = m_pawnPendingPromotion.GetLocation() / Constants.BOARD_SIZE;
+				switch (pieceTypeChosen)
+				{
+					case Constants.TYPE_QUEEN:
+						promotedPiece = new Queen(m_currentTeam, x, y);
+						break;
+					case Constants.TYPE_ROOK:
+						promotedPiece = new Rook(m_currentTeam, x, y);
+						break;
+					case Constants.TYPE_BISHOP:
+						promotedPiece = new Bishop(m_currentTeam, x, y);
+						break;
+					case Constants.TYPE_KNIGHT:
+						promotedPiece = new Knight(m_currentTeam, x, y);
+						break;
+				}
+				promotedPiece.MovePiece(x, y);
+				promotedPiece.Setup();
+				
+				//Adjust the board and team rosters
+				var teamIndex:int = teamPieces.indexOf(m_pawnPendingPromotion);
+				teamPieces.splice(teamIndex, 1);
+				m_pawnPendingPromotion.Cleanup();
+				m_pawnPendingPromotion = null;
+				
+				m_boardState[GetTileIndex(x, y)] = promotedPiece;
+				teamPieces.push(promotedPiece);
+			}
+			
+			EndTurn();
+			UpdateAllViews();
+		}
+		
 		
 		
 		private function AreNoMovesAvailable():Boolean 
@@ -391,6 +450,7 @@ package model
 			AddPieceToBoard(Constants.TYPE_BISHOP, Constants.TEAM_WHITE, 5, 7);
 			AddPieceToBoard(Constants.TYPE_KNIGHT, Constants.TEAM_WHITE, 6, 7);
 			AddPieceToBoard(Constants.TYPE_ROOK, Constants.TEAM_WHITE, 7, 7);
+			
 		}
 		
 		private function AddPieceToBoard(type:int, team:int, x:int, y:int):void
@@ -595,6 +655,35 @@ package model
 				delete m_gameStateHistory[m_gameStateHistoryMap[i]];
 			}
 			m_gameStateHistoryMap.splice(0, m_gameStateHistoryMap.length);
+		}
+		
+		private function CheckForPendingPromotion():Boolean
+		{
+			var teamArray:Array = null;
+			if (m_currentTeam == Constants.TEAM_WHITE)
+			{
+				teamArray = m_whitePieces;
+			}
+			else if (m_currentTeam == Constants.TEAM_BLACK)
+			{
+				teamArray = m_blackPieces;
+			}
+			
+			for (var i:int = 0; i < teamArray.length; i++)
+			{
+				var pawn:Pawn = teamArray[i] as Pawn;
+				//See if the pawn has reached the edge of the board
+				if (pawn != null)
+				{
+					var y:int = pawn.GetLocation() / Constants.BOARD_SIZE;
+					if (y == 0 || y == Constants.BOARD_SIZE - 1)
+					{
+						m_pawnPendingPromotion = pawn;
+						return true;
+					}
+				}
+			}
+			return false;
 		}
 		
 	}
