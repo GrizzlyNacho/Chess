@@ -20,14 +20,13 @@ package model
 		private static var s_Instance:MatchMgr = null;
 		
 		private var m_boardState:Array = null;
-		private var m_turnCounter:int = 0;
 		private var m_views:Array = null;
 		
 		private var m_currentTeam:int = Constants.TEAM_NONE;
 		private var m_currentSelectedPiece:Piece = null;
 		
-		private var m_teamInCheck:int = Constants.TEAM_NONE;
-		private var m_teamWithNoMoves:int = Constants.TEAM_NONE;
+		private var m_gameState:int = Constants.GAME_STATE_REG;
+		private var m_turnsSincePawnOrCapture:int = 0;
 		
 		//Track all pieces for each player
 		private var m_whitePieces:Array = null;
@@ -66,8 +65,9 @@ package model
 		
 		public function StartNewGame():void
 		{
+			m_gameState = Constants.GAME_STATE_REG;
 			m_currentTeam = Constants.TEAM_WHITE;
-			m_turnCounter = 0;
+			m_turnsSincePawnOrCapture = 0;
 			
 			AddStandardBoardSetup();
 			
@@ -86,6 +86,12 @@ package model
 		
 		public function SelectTile(x:int, y:int):void
 		{
+			if (m_gameState != Constants.GAME_STATE_CHECK && m_gameState != Constants.GAME_STATE_REG)
+			{
+				//Don't allow tile actions when the game is over.
+				return;
+			}
+			
 			var targetedPiece:Piece = m_boardState[GetTileIndex(x, y)];
 			//Determine if the unit is owned by the player
 			if (targetedPiece != null && m_currentTeam == targetedPiece.GetTeam()
@@ -96,6 +102,12 @@ package model
 			}
 			else if (m_currentSelectedPiece != null && IsValidMove(m_currentSelectedPiece, x, y))
 			{
+				if (GetTileType(x, y) != Constants.TYPE_NO_PIECE || m_currentSelectedPiece.GetType() == Constants.TYPE_PAWN)
+				{
+					//We set to -1 as end turn decrements every turn and after this method we lose sight of what happened in the move
+					m_turnsSincePawnOrCapture = -1;
+				}
+				
 				var origin:int = m_currentSelectedPiece.GetLocation();
 				ExecuteMove(m_currentSelectedPiece, targetedPiece, origin, x, y);
 				
@@ -111,29 +123,31 @@ package model
 		
 		public function EndTurn():void
 		{
-			m_turnCounter ++;
-			
+			m_turnsSincePawnOrCapture ++;
 			m_currentTeam = 1 - m_currentTeam;
 			m_currentSelectedPiece = null;
 			
-			//Determine Check (we only care about the current team)
-			m_teamInCheck = Constants.TEAM_NONE;
-			if (IsTeamInCheck(m_currentTeam))
-			{
-				m_teamInCheck = m_currentTeam;
-				trace('Team ' + m_currentTeam + ' is in CHECK!');
-			}
-			
-			//Determine number of available moves
+			m_gameState = Constants.GAME_STATE_REG;
 			var noMoves:Boolean = AreNoMovesAvailable();
-			m_teamWithNoMoves = Constants.TEAM_NONE;
-			if (noMoves)
-			{
-				m_teamWithNoMoves = m_currentTeam;
-				trace('Team ' + m_currentTeam + ' has no moves!');
-			}
+			var inCheck:Boolean = IsTeamInCheck(m_currentTeam);
 			
-			//Draw conditions 
+			if (noMoves && inCheck)
+			{
+				m_gameState = Constants.GAME_STATE_CHECKMATE;
+			}
+			else if (m_turnsSincePawnOrCapture >= Constants.TURNS_WITHOUT_EVENT_TO_DRAW)
+			{
+				m_gameState = Constants.GAME_STATE_DRAW_50;
+			}
+			else if (noMoves)
+			{
+				//Stalemate (no moves, but not in check)
+				m_gameState = Constants.GAME_STATE_DRAW_STALEMATE;
+			}
+			else if (inCheck)
+			{
+				m_gameState = Constants.GAME_STATE_CHECK;
+			}
 		}
 		
 		public function GetTileTeam(x:int, y:int):int
@@ -226,9 +240,9 @@ package model
 			m_boardState[rookIndex] = null;
 		}
 		
-		public function IsInCheck():Boolean 
+		public function GetGameState():int 
 		{
-			return m_teamInCheck != Constants.TEAM_NONE;
+			return m_gameState;
 		}
 		
 		//Assumes current team
@@ -255,12 +269,6 @@ package model
 				return !IsSelfHarmingMove(selectedPiece, x, y);
 			}
 			return false
-		}
-		
-		public function IsInCheckMate():Boolean 
-		{
-			return m_teamInCheck != Constants.TEAM_NONE
-				&& m_teamWithNoMoves != Constants.TEAM_NONE;
 		}
 		
 		

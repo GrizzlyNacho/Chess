@@ -38,6 +38,9 @@ package
 	
 		[Embed (source = "../assets/checkMateFlag.png")]
 		public static const CheckMateImage:Class;
+		
+		[Embed (source = "../assets/drawFlag.png")]
+		public static const DrawImage:Class;
 	}
 
 }

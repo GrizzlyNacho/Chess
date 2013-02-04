@@ -12,6 +12,16 @@ package
 		public static const TEAM_WHITE:int = 0;
 		public static const TEAM_BLACK:int = 1;
 		
+		public static const TURNS_WITHOUT_EVENT_TO_DRAW:int = 50;
+		
+		public static const GAME_STATE_REG:int = 				0;
+		public static const GAME_STATE_CHECK:int = 				1;
+		public static const GAME_STATE_CHECKMATE:int = 			2;
+		public static const GAME_STATE_DRAW_50:int = 			3;
+		public static const GAME_STATE_DRAW_INSUF_MATERIAL:int = 4;
+		public static const GAME_STATE_DRAW_3_REP:int = 		5;
+		public static const GAME_STATE_DRAW_STALEMATE:int = 	6;
+		
 		public static const TYPE_NO_PIECE:int 	= 0;
 		public static const TYPE_PAWN:int 		= 1;
 		public static const TYPE_ROOK:int 		= 2;

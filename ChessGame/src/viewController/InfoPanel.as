@@ -1,6 +1,8 @@
 package viewController 
 {
 	import flash.display.Bitmap;
+	import flash.text.TextField;
+	import flash.text.TextFormat;
 	import model.MatchMgr;
 	
 	public class InfoPanel extends View 
@@ -12,6 +14,8 @@ package viewController
 		private var m_checkImage:Bitmap = null;
 		private var m_checkMateImage:Bitmap = null;
 		private var m_drawImage:Bitmap = null;
+		private var m_drawExplainText:TextField = null;
+		private var m_textFormat:TextFormat = null;
 		
 		public function InfoPanel(x:int, y:int) 
 		{
@@ -54,6 +58,23 @@ package viewController
 			m_checkMateImage.visible = false;
 			this.addChild(m_checkMateImage);
 			
+			m_drawImage = new Resources.DrawImage();
+			m_drawImage.x = c_drawWidth / 2 - m_drawImage.width / 2;
+			m_drawImage.y = 260;
+			m_drawImage.visible = false;
+			this.addChild(m_drawImage);
+			
+			m_textFormat = new TextFormat();
+			m_textFormat.font = "Arial";
+			m_textFormat.size = 16;
+			m_textFormat.align = "center";
+			
+			m_drawExplainText = new TextField();
+			m_drawExplainText.x = 0;
+			m_drawExplainText.y = m_drawImage.y + 69;
+			m_drawExplainText.width = c_drawWidth;
+			this.addChild(m_drawExplainText);
+			
 			MatchMgr.GetInstance().RegisterView(this);
 		}
 		
@@ -67,8 +88,38 @@ package viewController
 				(m_turnIndicators[1 - team] as Bitmap).visible = false;
 			}
 			
-			m_checkImage.visible = MatchMgr.GetInstance().IsInCheck();
-			m_checkMateImage.visible = MatchMgr.GetInstance().IsInCheckMate();
+			var gameState:int = MatchMgr.GetInstance().GetGameState();
+			m_checkImage.visible = false;
+			m_checkMateImage.visible = false;
+			m_drawImage.visible = false;
+			m_drawExplainText.text = "";
+			switch(gameState)
+			{
+				case Constants.GAME_STATE_CHECK:
+					m_checkImage.visible = true;
+					break;
+				case Constants.GAME_STATE_CHECKMATE:
+					m_checkImage.visible = true;
+					m_checkMateImage.visible = true;
+					break;
+				case Constants.GAME_STATE_DRAW_3_REP:
+					m_drawImage.visible = true;
+					m_drawExplainText.text = "Same board state 3 times!";
+					break;
+				case Constants.GAME_STATE_DRAW_50:
+					m_drawImage.visible = true;
+					m_drawExplainText.text = "50 moves without event!";
+					break;
+				case Constants.GAME_STATE_DRAW_INSUF_MATERIAL:
+					m_drawImage.visible = true;
+					m_drawExplainText.text = "Not enough pieces to win left!";
+					break;
+				case Constants.GAME_STATE_DRAW_STALEMATE:
+					m_drawImage.visible = true;
+					m_drawExplainText.text = "Stalemate!";
+					break;
+			}
+			m_drawExplainText.setTextFormat(m_textFormat);
 		}
 		
 		public function Cleanup():void
