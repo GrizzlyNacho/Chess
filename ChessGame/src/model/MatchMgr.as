@@ -8,6 +8,7 @@ package model
 	import model.pieces.Queen;
 	import model.pieces.Rook;
 	import viewController.View;
+	import flash.utils.Dictionary;
 
 	/*
 	 * Singleton class to track the state of the match.
@@ -28,6 +29,10 @@ package model
 		private var m_gameState:int = Constants.GAME_STATE_REG;
 		private var m_turnsSincePawnOrCapture:int = 0;
 		
+		//A dictionary keyed by the board state representation with the number of times encountered saved
+		private var m_gameStateHistory:Dictionary = null; 
+		private var m_gameStateHistoryMap:Array = null; //An array of the keys in the dictionary for use in cleanup
+		
 		//Track all pieces for each player
 		private var m_whitePieces:Array = null;
 		private var m_blackPieces:Array = null;
@@ -39,6 +44,8 @@ package model
 			m_views = new Array();
 			m_whitePieces = new Array();
 			m_blackPieces = new Array();
+			m_gameStateHistory = new Dictionary();
+			m_gameStateHistoryMap = new Array();
 			
 			//Initialize the board state to full null.
 			m_boardState = new Array();
@@ -69,6 +76,7 @@ package model
 			m_currentTeam = Constants.TEAM_WHITE;
 			m_turnsSincePawnOrCapture = 0;
 			
+			ClearStateHistory();
 			AddStandardBoardSetup();
 			
 			//FIXME: Can combine the following two loops if same length is guaranteed, but it isn't for testing
@@ -108,6 +116,13 @@ package model
 					m_turnsSincePawnOrCapture = -1;
 				}
 				
+				if (GetTileType(x, y) != Constants.TYPE_NO_PIECE)
+				{
+					//We can't have the same game state again if a piece is captured.
+					//Helps keep the amount being tracked down.
+					ClearStateHistory();
+				}
+				
 				var origin:int = m_currentSelectedPiece.GetLocation();
 				ExecuteMove(m_currentSelectedPiece, targetedPiece, origin, x, y);
 				
@@ -131,10 +146,33 @@ package model
 			var noMoves:Boolean = AreNoMovesAvailable();
 			var inCheck:Boolean = IsTeamInCheck(m_currentTeam);
 			var enoughMaterials:Boolean = HasEnoughPiecesToWin(m_whitePieces) || HasEnoughPiecesToWin(m_blackPieces);
+			var sameStateSeenThrice:Boolean = false;
+			
+			//Check for repeated board layouts.
+			var boardStateKey:String = CreateCurrentStateRep();
+			var keyIndex:int = m_gameStateHistoryMap.indexOf(boardStateKey);
+			//State has occurred before so increment it.
+			if (keyIndex >= 0)
+			{
+				m_gameStateHistory[boardStateKey] += 1;
+				if (m_gameStateHistory[boardStateKey] >= 3)
+				{
+					sameStateSeenThrice = true;
+				}
+			}
+			else //Log it as occurred and create an entry
+			{
+				m_gameStateHistory[boardStateKey] = 1;
+				m_gameStateHistoryMap.push(boardStateKey);
+			}
 			
 			if (noMoves && inCheck)
 			{
 				m_gameState = Constants.GAME_STATE_CHECKMATE;
+			}
+			else if (sameStateSeenThrice)
+			{
+				m_gameState = Constants.GAME_STATE_DRAW_3_REP;
 			}
 			else if (m_turnsSincePawnOrCapture >= Constants.TURNS_WITHOUT_EVENT_TO_DRAW)
 			{
@@ -530,6 +568,33 @@ package model
 				}
 			}
 			return false;
+		}
+		
+		private function CreateCurrentStateRep():String
+		{
+			var rep:String = new String();
+			for (var i:int = 0; i < Constants.BOARD_SIZE * Constants.BOARD_SIZE; i++)
+			{
+				if (m_boardState[i] == null)
+				{
+					rep += "n";
+				}
+				else
+				{
+					var piece:Piece = m_boardState[i] as Piece;
+					rep += piece.GetTeam() + piece.GetType();
+				}
+			}
+			return rep;
+		}
+		
+		private function ClearStateHistory():void
+		{
+			for (var i:int = 0; i < m_gameStateHistoryMap.length; i++)
+			{
+				delete m_gameStateHistory[m_gameStateHistoryMap[i]];
+			}
+			m_gameStateHistoryMap.splice(0, m_gameStateHistoryMap.length);
 		}
 		
 	}
